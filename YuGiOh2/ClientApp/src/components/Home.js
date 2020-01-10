@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { Route, Router, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+
 
 export class Home extends Component {
     static displayName = Home.name;
@@ -8,11 +9,11 @@ export class Home extends Component {
         return (
             <div>
                 <div className="container" style={{ marginTop: 20 + "%" }}>
-                    <div><a className="col-lg-12 btn btn-info center-block">Start</a></div>
+                    <div><Link to="/duel" className="col-lg-12 btn btn-info center-block">Duel</Link></div>
                     <br />
-                    <div><a className="col-lg-12 btn btn-info center-block">Edit</a></div>
+                    <div><Link to="" className="col-lg-12 btn btn-info center-block">Edit</Link></div>
                     <br />
-                    <div><a className="col-lg-12 btn btn-info center-block">Option</a></div>
+                    <div><Link to="" className="col-lg-12 btn btn-info center-block">Option</Link></div>
                 </div>
             </div>
         );
