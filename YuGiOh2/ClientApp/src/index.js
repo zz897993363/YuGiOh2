@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Duel } from './components/Duel';
 import { Home } from './components/Home';
+import { DataBase } from './components/DataBase';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import registerServiceWorker from './registerServiceWorker';
 
@@ -13,6 +14,7 @@ const SliderComponent = () => (
     <Switch>
         <Route exact path='/' component={Home} />
         <Route path="/duel" component={Duel} />
+        <Route path="/db" component={DataBase} />
     </Switch>
 )
 
