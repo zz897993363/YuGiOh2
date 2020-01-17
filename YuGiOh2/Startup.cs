@@ -2,9 +2,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using YuGiOh2.Data;
+using YuGiOh2.Hubs;
 
 namespace YuGiOh2
 {
@@ -20,7 +23,11 @@ namespace YuGiOh2
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var mysqlString = Configuration.GetConnectionString("MySqlConnection");
+            services.AddDbContext<DBContext>(options => options.UseMySql(mysqlString));
+            DuelUtils.DBContext = services.BuildServiceProvider().GetService<DBContext>();
             services.AddMvc(options => options.EnableEndpointRouting = false);
+            services.AddSignalR();
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
@@ -46,12 +53,18 @@ namespace YuGiOh2
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
+            app.UseRouting();
 
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
                     name: "default",
                     template: "{controller}/{action=Index}/{id?}");
+            });
+
+            app.UseEndpoints(ep =>
+            {
+                ep.MapHub<DuelHub>("/hub");
             });
 
             app.UseSpa(spa =>
