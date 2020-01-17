@@ -7,31 +7,39 @@ export class Duel extends Component {
         super(props);
         this.state = {
             connected: false,
+            ready: false,
             onlineNums: 0,
         }
-
+        this.standBy = this.standBy.bind(this);
     }
 
     componentDidMount() {
-        var connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
+        this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
 
-        connection.on("onlineNums", num => this.setState({ onlineNums: num }));
+        this.connection.on("logErr", err => { console.log(err) });
+        this.connection.on("onlineNums", num => this.setState({ onlineNums: num }));
+        this.connection.on("duelInit", game => this.duelInit(game));
 
-        connection.start()
+        this.connection.start()
             .then(() => {
                 this.setState({ connected: true })
             })
             .then(
                 () => {
-                    console.log(`状态：${connection.state}`)
-                    connection.invoke("OnlineNumbers")
+                    console.log(`状态：${this.connection.state}`)
+                    this.connection.invoke("OnlineNumbers")
                 })
             .catch(err => console.log(err));
 
     }
 
-    standby() {
+    duelInit(game) {
+        console.log(game);
+    }
 
+    standBy() {
+        this.connection.invoke("StandBy");
+        this.setState({ ready: true });
     }
 
     blank(mb) {
@@ -80,7 +88,7 @@ export class Duel extends Component {
                     <div className="square"></div>
                 </div>
             </div>;
-        let hands = 
+        let hands =
             <div className="col-lg-12 center-block" style={{ display: "table" }}>
                 <div className="square"></div>
                 <div className="square"></div>
@@ -92,7 +100,9 @@ export class Duel extends Component {
             <div className="container" style={{ marginTop: 20 + "%" }}>
                 <div>
                     <label>当前在线人数：{this.state.onlineNums} 人</label>
-                    <button className="btn btn-success" onClick={this.standby} disabled={!this.state.connected}>准备</button>
+                    <button className="btn btn-success" onClick={this.standBy}
+                        disabled={!this.state.connected || this.state.ready}>
+                        {this.state.ready ? "准备中" : "准备"}</button>
                 </div>
                 {hands}
                 {this.blank(5)}

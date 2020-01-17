@@ -77,7 +77,7 @@ namespace YuGiOh2.Base
             MonsterType = card_m.MonsterType;
             SummonedAttribute = card_m.SummonedAttribute;
             Status = new CardStatus();
-            UID = new Guid().ToString();
+            UID = Guid.NewGuid().ToString();
         }
 
         public virtual void Banished()

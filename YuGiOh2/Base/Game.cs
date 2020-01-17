@@ -11,11 +11,11 @@ namespace YuGiOh2.Base
         public readonly Player Player1;
         public readonly Player Player2;
 
-        public Game()
+        public Game(string id1, string id2)
         {
-            Player1 = new Player(null);
+            Player1 = new Player(null, id1);
             Player1.Lose += Player1_Lose;
-            Player2 = new Player(null);
+            Player2 = new Player(null, id2);
             Player2.Lose += Player2_Lose;
             var c1 = DuelUtils.GetCard("89631139");
             var c2 = DuelUtils.GetCard("46986414");

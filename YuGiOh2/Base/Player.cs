@@ -8,20 +8,20 @@ namespace YuGiOh2.Base
 {
     public class Player
     {
-        public string ID { get; private set; }
+        public string ID { get; set; }
         public int HP { get; set; }
         public Card[] Fields { get; set; }
         public List<Card> Grave { get; set; }
         public List<Card> Deck { get; set; }
         public List<Card> Hands { get; set; }
 
-        public Player(Card[] cards, int hp = 8000)
+        public Player(Card[] cards = null, string id = null, int hp = 8000)
         {
-            ID = new Guid().ToString();
+            ID = id;
             HP = hp;
             Fields = new Card[10];
             Grave = new List<Card>();
-            Deck = new List<Card>(cards);
+            Deck = new List<Card>(cards ?? new Card[] { });
         }
 
         public void DrawPhase()
