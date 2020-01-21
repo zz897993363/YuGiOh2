@@ -10,18 +10,19 @@ namespace YuGiOh2.Base
     {
         public string ID { get; set; }
         public int HP { get; set; }
-        public Card[] Fields { get; set; }
+        public Field Field { get; set; }
         public List<Card> Grave { get; set; }
         public List<Card> Deck { get; set; }
         public List<Card> Hands { get; set; }
 
-        public Player(Card[] cards = null, string id = null, int hp = 8000)
+        public Player(ICollection<Card> cards = null, string id = null, int hp = 8000)
         {
             ID = id;
             HP = hp;
-            Fields = new Card[10];
+            Field = new Field();
             Grave = new List<Card>();
             Deck = new List<Card>(cards ?? new Card[] { });
+            Hands = new List<Card>();
         }
 
         public void DrawPhase()
@@ -81,16 +82,16 @@ namespace YuGiOh2.Base
         {
             Card card = Hands.FirstOrDefault(c => c.UID == UID);
             Hands.Remove(card);
-            if (Fields[fieldIndex] != null)
+            if (Field.MonsterFields[fieldIndex] != null)
                 Fusion(card, fieldIndex);
             else
-                Fields[fieldIndex] = card;
+                Field.MonsterFields[fieldIndex] = (MonsterCard)card;
         }
 
         public void Fusion(Card card1, int fieldIndex)
         {
-            var card_m = DuelUtils.GetFusionCard(card1.Password, Fields[fieldIndex].Password);
-            Fields[fieldIndex] = card_m == null ? card1 : new MonsterCard(card_m);
+            var card_m = DuelUtils.GetFusionCard(card1.Password, Field.MonsterFields[fieldIndex].Password);
+            Field.MonsterFields[fieldIndex] = card_m == null ? (MonsterCard)card1 : new MonsterCard(card_m);
         }
 
         public event EventHandler Lose;

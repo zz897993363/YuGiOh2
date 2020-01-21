@@ -34,6 +34,18 @@ namespace YuGiOh2.Hubs
             }
         }
 
+        private Dictionary<string, Game> games;
+
+        public Dictionary<string, Game> Games
+        {
+            get
+            {
+                if (games == null)
+                    games = new Dictionary<string, Game>();
+                return games;
+            }
+        }
+
         private static readonly object ojb = new object();
 
         public async Task LogError(Exception ex)
@@ -44,8 +56,15 @@ namespace YuGiOh2.Hubs
         public async Task DuelStart(string id1, string id2)
         {
             Game game = new Game(id1, id2);
-            string s = JsonConvert.SerializeObject(game);
-            await Clients.Clients(new string[] { id1, id2 }).SendAsync("duelInit", s);
+            Games.Add(game.UID, game);
+            var msg1 = MessageFactory.GetGameMessage(game.Player1, game.Player2);
+            var msg2 = MessageFactory.GetGameMessage(game.Player2, game.Player1);
+            string msgStr1 = JsonConvert.SerializeObject(msg1);
+            string msgStr2 = JsonConvert.SerializeObject(msg2);
+            await Clients.Clients(id1).SendAsync("duelInit", msgStr1);
+            await Clients.Clients(id2).SendAsync("duelInit", msgStr2);
+            //string s = JsonConvert.SerializeObject(game);
+            //await Clients.Clients(new string[] { id1, id2 }).SendAsync("duelInit", s);
         }
 
         public async Task OnlineNumbers()

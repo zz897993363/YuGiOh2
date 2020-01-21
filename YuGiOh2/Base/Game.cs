@@ -8,11 +8,13 @@ namespace YuGiOh2.Base
 {
     public class Game
     {
+        public readonly string UID;
         public readonly Player Player1;
         public readonly Player Player2;
 
         public Game(string id1, string id2)
         {
+            UID = Guid.NewGuid().ToString();
             Player1 = new Player(null, id1);
             Player1.Lose += Player1_Lose;
             Player2 = new Player(null, id2);

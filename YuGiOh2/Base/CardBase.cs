@@ -106,13 +106,13 @@ namespace YuGiOh2.Base
         }
     }
 
-    public class SpellCard : Card
+    public class SpellAndTrapCard : Card
     {
         public int Icon { get; set; }
-    }
-
-    public class TrapCard : Card
-    {
-        public int Icon { get; set; }
+        public CardStatus Status { get; set; }
+        public SpellAndTrapCard()
+        {
+            Status = new CardStatus();
+        }
     }
 }
