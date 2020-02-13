@@ -1,3 +1,4 @@
+import 'bootstrap/dist/css/bootstrap.css';
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom'
 

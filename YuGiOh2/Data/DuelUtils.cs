@@ -11,6 +11,8 @@ namespace YuGiOh2.Data
     {
         public static DBContext DBContext { get; set; }
 
+        private static List<Models.Card> _cards;
+
         public static Models.Card GetCard(string password)
         {
             return DBContext.Card.FirstOrDefault(c => c.Password == password);
@@ -30,13 +32,33 @@ namespace YuGiOh2.Data
             DBContext.Card.Add(card);
             return DBContext.SaveChanges();
         }
+
+        public static void ResetCard(Card card)
+        {
+            var card_m = _cards.FirstOrDefault(c => c.Password == card.Password);
+            if (card.CardCategory == 0)
+            {
+                card = new MonsterCard(card_m);
+            }
+            else
+            {
+                card = new SpellAndTrapCard(card_m);
+            }
+        }
+
+        public static List<Models.Card> GetAllCards()
+        {
+            if (_cards == null)
+                _cards = DBContext.Card.ToList();
+            return _cards;
+        }
     }
 
     public class DBContext : DbContext
     {
         public DBContext(DbContextOptions<DBContext> options) : base(options)
         {
-            
+
         }
 
         public DbSet<Models.Card> Card { get; set; }

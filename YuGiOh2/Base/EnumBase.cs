@@ -13,7 +13,9 @@ namespace YuGiOh2.Base
         Water,
         Fire,
         Wind,
-        Divine
+        Divine,
+        Spell,
+        Trap
     }
 
     public enum Icon
@@ -52,7 +54,8 @@ namespace YuGiOh2.Base
         Psychic,
         DivineBeast,
         Wyrm,
-        Cyberse
+        Cyberse,
+        None
     }
 
     public enum CardType
@@ -94,5 +97,31 @@ namespace YuGiOh2.Base
         Thunder,
         Water,
         Divine
+    }
+
+    public enum ChooseTargetType
+    {
+        /// <summary>
+        /// 无需选取对象
+        /// </summary>
+        None,
+        SelfFaceUpMonster,
+        SelfFaceDownMonster,
+        SelfMonster,
+        SelfFaceUpSpellAndTrap,
+        SelfFaceDownSpellAndTrap,
+        SelfSpellAndTrap,
+        FoeFaceUpMonster,
+        FoeFaceDownMonster,
+        FoeMonster,
+        FoeFaceUpSpellAndTrap,
+        FoeFaceDownSpellAndTrap,
+        FoeSpellAndTrap,
+        AllFaceUpMonster,
+        AllFaceDownMonster,
+        AllMonster,
+        AllFaceUpSpellAndTrap,
+        AllFaceDownSpellAndTrap,
+        AllSpellAndTrap
     }
 }

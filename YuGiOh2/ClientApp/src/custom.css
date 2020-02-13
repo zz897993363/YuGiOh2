@@ -1,29 +1,149 @@
 /* Provide sufficient contrast against white background */
 a {
-  color: #0366d6;
+    color: #0366d6;
 }
 
 code {
-  color: #E01A76;
+    color: #E01A76;
 }
 
 .btn-primary {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
 }
 
 .square {
     background: #fff;
     border: 1px solid #999;
     float: left;
-    font-size: 24px;
-    font-weight: bold;
-    line-height: 180px;
-    height: 150px;
+    height: 116px;
     margin-right: 2px;
     margin-left: 2px;
     padding: 0;
     text-align: center;
-    width: 100px;
+    width: 80px;
+}
+
+.msgBox {
+    display: block;
+    float: right;
+    height: 720px;
+    width: 240px;
+}
+
+.mstImg {
+    border: solid;
+    border-color: grey;
+}
+
+.mstTxt {
+    height: 36px;
+    display: block;
+}
+
+.mstA {
+    height: 100%;
+    width: 25%;
+    border-left: solid;
+    border-left-color: grey;
+    border-right: solid;
+    border-right-color: grey;
+    float: left;
+    font-size: 12px;
+}
+
+.mstB {
+    height: 100%;
+    width: 75%;
+    border-left: solid;
+    border-left-color: grey;
+    border-right: solid;
+    border-right-color: grey;
+    float: left;
+    font-size: 12px;
+}
+
+.bubble .bubble {
+    width: 150px;
+    position: absolute;
+    display: inline;
+    margin-left: -60px;
+    padding: 5px;
+    visibility: hidden;
+    opacity: 0;
+    margin-top: 0px;
+    background: #ffffff;
+    font-size: 1em;
+    z-index: 1;
+    /* Setting the border-radius property for all Browsers */
+    -moz-border-radius: 5px; /* Firefox */
+    -webkit-border-radius: 5px; /* Safari and Chrome */
+    border-radius: 5px; /* Browsers that Support it like Opera */
+    /* Setting the box-shadow property for all Browsers */
+    -moz-box-shadow: 0 0 8px gray; /* Firefox */
+    -webkit-box-shadow: 0 0 8px gray; /* Safari and Chrome */
+    filter: progid:DXImageTransform.Microsoft.Shadow(color='#272229', Direction=135, Strength=3); /* IE */
+    box-shadow: 0 0 8px gray; /* Browsers that Support it like Opera */
+    /* Setting the transition property for all Browsers */
+    -moz-transition: all 0.5s ease-in-out; /* Firefox */
+    -webkit-transition: all 0.5s ease-in-out; /* Safari and Chrome */
+    -o-transition: all 0.5s ease-in-out; /* Opera */
+    transition: all 0.5s ease-in-out; /* Browsers that Support it */
+}
+
+
+.bubble:hover .bubble {
+    visibility: visible;
+    opacity: 1;
+    margin-top: 5px;
+    /* Setting the transition property for all Browsers */
+    -moz-transition: all 0.5s ease-in-out; /* Firefox */
+    -webkit-transition: all 0.5s ease-in-out; /* Safari and Chrome */
+    -o-transition: all 0.5s ease-in-out; /* Opera */
+    transition: all 0.5s ease-in-out; /* Browsers that Support it */
+}
+
+.bubble .bubble2 {
+    visibility: visible;
+    opacity: 1;
+    margin-top: 5px;
+    /* Setting the transition property for all Browsers */
+    -moz-transition: all 0.5s ease-in-out; /* Firefox */
+    -webkit-transition: all 0.5s ease-in-out; /* Safari and Chrome */
+    -o-transition: all 0.5s ease-in-out; /* Opera */
+    transition: all 0.5s ease-in-out; /* Browsers that Support it */
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.left {
+    order: -1;
+    flex: 0 1 20%;
+    margin-left: 5%;
+    margin-right: 10%;
+    height: 90%;
+    transform: translate(0, 150px);
+}
+
+.middle {
+    flex-grow: 1;
+    height: 90%;
+}
+
+.right {
+    flex: 0 1 10%;
+    margin-left: 5%;
+    margin-right: 10%;
+    height: 90%;
+    transform: translate(0, 150px);
+}
+
+body {
+    background-image: url("/pics/background.jpg");
+    background-size: 100% 100%;
 }

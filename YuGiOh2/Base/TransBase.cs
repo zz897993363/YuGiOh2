@@ -7,6 +7,11 @@ namespace YuGiOh2.Base
 {
     public class MessageToClient
     {
+        public string UID { get; set; }
+        public string Winner { get; set; }
+        public bool FirstTurn { get; set; }
+        public bool Enable { get; set; }
+        public bool CanSummon { get; set; }
         public int PlayerHP { get; set; }
         public int EnemyHP { get; set; }
         public int PlayerDeckCount { get; set; }
@@ -32,7 +37,7 @@ namespace YuGiOh2.Base
             faceDownSAT.Status.FaceDown = true;
         }
 
-        public static MessageToClient GetGameMessage(Player player, Player enemy)
+        public static MessageToClient GetGameMessage(Player player, Player enemy, string uid)
         {
             MessageToClient message = new MessageToClient();
             if (player != null)
@@ -42,8 +47,10 @@ namespace YuGiOh2.Base
                 message.PlayerGrave = player.Grave;
                 message.PlayerHP = player.HP;
                 message.PlayerHands = player.Hands;
+                message.CanSummon = player.CanSummon;
+                message.Enable = player.YourTurn;
+                message.FirstTurn = player.FirstTurn;
             }
-
             if (enemy != null)
             {
                 message.EnemyDeckCount = enemy.Deck.Count;
@@ -51,6 +58,24 @@ namespace YuGiOh2.Base
                 message.EnemyGrave = enemy.Grave;
                 message.EnemyHP = enemy.HP;
                 message.EnemyHandsCount = enemy.Hands.Count;
+            }
+            message.UID = uid;
+            if (player != null && enemy != null)
+            {
+                if (player.Lose && enemy.Lose)
+                {
+                    message.Winner = "Draw";
+                    return message;
+                }
+                if (player.Lose)
+                {
+                    message.Winner = "Enemy";
+                    return message;
+                }
+                if (enemy.Lose)
+                {
+                    message.Winner = "Player";
+                }
             }
             return message;
         }

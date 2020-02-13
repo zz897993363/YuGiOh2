@@ -11,9 +11,11 @@ namespace YuGiOh2.Base
     {
         public string UID { get; set; }
         public string Name { get; set; }
+        public string Cname { get; set; }
         public int CardCategory { get; set; }
         public string CardText { get; set; }
         public string Password { get; set; }
+        public int ChooseTargetType { get; set; }
     }
 
     public class CardStatus
@@ -66,8 +68,9 @@ namespace YuGiOh2.Base
         private void Initialize(Models.Card card_m)
         {
             CardCategory = card_m.Category;
-            CardText = card_m.Text;
+            CardText = card_m.Ctext;
             Name = card_m.Name;
+            Cname = card_m.Cname;
             Password = card_m.Password;
             ATK = card_m.ATK;
             DEF = card_m.DEF;
@@ -76,6 +79,7 @@ namespace YuGiOh2.Base
             Level = card_m.Level;
             MonsterType = card_m.MonsterType;
             SummonedAttribute = card_m.SummonedAttribute;
+            ChooseTargetType = card_m.ChooseTargetType;
             Status = new CardStatus();
             UID = Guid.NewGuid().ToString();
         }
@@ -112,6 +116,20 @@ namespace YuGiOh2.Base
         public CardStatus Status { get; set; }
         public SpellAndTrapCard()
         {
+            UID = Guid.NewGuid().ToString();
+            Status = new CardStatus();
+        }
+
+        public SpellAndTrapCard(Models.Card card_m)
+        {
+            Icon = card_m.Icon;
+            CardCategory = card_m.Category;
+            CardText = card_m.Ctext;
+            Name = card_m.Name;
+            Cname = card_m.Cname;
+            Password = card_m.Password;
+            ChooseTargetType = card_m.ChooseTargetType;
+            UID = Guid.NewGuid().ToString();
             Status = new CardStatus();
         }
     }

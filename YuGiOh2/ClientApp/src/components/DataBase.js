@@ -6,6 +6,7 @@ export class DataBase extends Component {
         super(props);
         this.state = {
             name: '',
+            cname: '',
             atk: 0,
             def: 0,
             attribute: 0,
@@ -16,7 +17,8 @@ export class DataBase extends Component {
             password: '',
             icon: 0,
             category: 0,
-            text: ''
+            text: '',
+            ctext: ''
         };
         this.print = this.print.bind(this);
         this.addCard = this.addCard.bind(this);
@@ -57,6 +59,14 @@ export class DataBase extends Component {
                     <div className="col-lg-4 col-xs-12">
                         <div className="input-group mb-3">
                             <div className="input-group-prepend">
+                                <span className="input-group-text">Name</span>
+                            </div>
+                            <input type="text" className="form-control" onChange={evt => this.setState({ cname: evt.target.value })} />
+                        </div>
+                    </div>
+                    <div className="col-lg-4 col-xs-12">
+                        <div className="input-group mb-3">
+                            <div className="input-group-prepend">
                                 <span className="input-group-text">ATK</span>
                             </div>
                             <input type="number" className="form-control" onChange={evt => this.setState({ atk: parseInt(evt.target.value) })} />
@@ -85,6 +95,8 @@ export class DataBase extends Component {
                                 <option value="4">Fire</option>
                                 <option value="5">Wind</option>
                                 <option value="6">Divine</option>
+                                <option value="7">Spell</option>
+                                <option value="8">Trap</option>
                             </select>
                         </div>
                     </div>
@@ -126,6 +138,7 @@ export class DataBase extends Component {
                                 <option value="21">DivineBeast</option>
                                 <option value="22">Wyrm</option>
                                 <option value="23">Cyberse</option>
+                                <option value="24">None</option>
                             </select>
                         </div>
                     </div>
@@ -160,18 +173,18 @@ export class DataBase extends Component {
                                 <span className="input-group-text">SAttribute</span>
                             </div>
                             <select className="custom-select" onChange={evt => this.setState({ summonedattribute: parseInt(evt.target.value) })}>
-                                <option value="1">None</option>
-                                <option value="2">Dark</option>
-                                <option value="4">White</option>
-                                <option value="8">Devil</option>
-                                <option value="16">Fantasy</option>
-                                <option value="32">Fire</option>
-                                <option value="64">Forest</option>
-                                <option value="128">Wind</option>
-                                <option value="256">Earth</option>
-                                <option value="512">Thunder</option>
-                                <option value="1024">Water</option>
-                                <option value="2048">Divine</option>
+                                <option value="0">None</option>
+                                <option value="1">Dark</option>
+                                <option value="2">White</option>
+                                <option value="3">Devil</option>
+                                <option value="4">Fantasy</option>
+                                <option value="5">Fire</option>
+                                <option value="6">Forest</option>
+                                <option value="7">Wind</option>
+                                <option value="8">Earth</option>
+                                <option value="9">Thunder</option>
+                                <option value="10">Water</option>
+                                <option value="11">Divine</option>
                             </select>
                         </div>
                     </div>
@@ -215,6 +228,10 @@ export class DataBase extends Component {
                         <div className="col-lg-12 col-xs-12">
                             <textarea style={{ width: 100 + "%" }} maxLength="300" placeholder="Please Input Card Text"
                                 onChange={evt => this.setState({ text: evt.target.value })}></textarea>
+                        </div>
+                        <div className="col-lg-12 col-xs-12">
+                            <textarea style={{ width: 100 + "%" }} maxLength="300" placeholder="请输入卡片文本"
+                                onChange={evt => this.setState({ ctext: evt.target.value })}></textarea>
                         </div>
                     </div>
                 </div>

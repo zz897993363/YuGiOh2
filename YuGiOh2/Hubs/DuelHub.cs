@@ -34,9 +34,9 @@ namespace YuGiOh2.Hubs
             }
         }
 
-        private Dictionary<string, Game> games;
+        private static Dictionary<string, Game> games;
 
-        public Dictionary<string, Game> Games
+        public static Dictionary<string, Game> Games
         {
             get
             {
@@ -46,25 +46,164 @@ namespace YuGiOh2.Hubs
             }
         }
 
-        private static readonly object ojb = new object();
+        private static readonly object obj = new object();
 
         public async Task LogError(Exception ex)
         {
-            await Clients.Client(Context.ConnectionId).SendAsync("logErr", ex.Message);
+            await Clients.Client(Context.ConnectionId).SendAsync("logErr", ex.Message + ex.StackTrace);
         }
 
+        //初始化对局
         public async Task DuelStart(string id1, string id2)
         {
             Game game = new Game(id1, id2);
             Games.Add(game.UID, game);
-            var msg1 = MessageFactory.GetGameMessage(game.Player1, game.Player2);
-            var msg2 = MessageFactory.GetGameMessage(game.Player2, game.Player1);
+            game.Player1.DrawPhase();
+            game.Player2.DrawPhase();
+            game.Player2.YourTurn = false;
+            var msg1 = MessageFactory.GetGameMessage(game.Player1, game.Player2, game.UID);
+            var msg2 = MessageFactory.GetGameMessage(game.Player2, game.Player1, game.UID);
             string msgStr1 = JsonConvert.SerializeObject(msg1);
             string msgStr2 = JsonConvert.SerializeObject(msg2);
             await Clients.Clients(id1).SendAsync("duelInit", msgStr1);
             await Clients.Clients(id2).SendAsync("duelInit", msgStr2);
-            //string s = JsonConvert.SerializeObject(game);
-            //await Clients.Clients(new string[] { id1, id2 }).SendAsync("duelInit", s);
+        }
+
+        public void InitComplete(string uid)
+        {
+            lock (obj)
+            {
+                Games[uid].InitCount++;
+                if (Games[uid].InitCount > 1)
+                {
+                    TurnStart(uid, Games[uid].Player1.ID);
+                }
+            }
+        }
+
+        public async Task TurnStart(string uid, string playerID)
+        {
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+            Player1.DrawPhase();
+            Player1.FirstTurn = true;
+            await SendMessage(Player1, Player2, uid);
+        }
+
+        public async Task SendMessage(Player player1, Player player2, string uid)
+        {
+            var msg1 = MessageFactory.GetGameMessage(player1, player2, uid);
+            var msg2 = MessageFactory.GetGameMessage(player2, player1, uid);
+            string msgStr1 = JsonConvert.SerializeObject(msg1);
+            string msgStr2 = JsonConvert.SerializeObject(msg2);
+            await Clients.Clients(player1.ID).SendAsync("renderGame", msgStr1);
+            await Clients.Clients(player2.ID).SendAsync("renderGame", msgStr2);
+        }
+
+        public async Task SummonFromHands(string uid, string cardID)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+            if (!Player1.CanSummon)
+                return;
+
+            Player1.SummonMonsterFromHands(cardID);
+            
+            await SendMessage(Player1, Player2, uid);
+        }
+
+        public async Task EffectFromHands(string uid, string cardID)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+
+            Player1.EffectFromHands(cardID);
+
+            await SendMessage(Player1, Player2, uid);
+        }
+
+        public async Task SetFromHands(string uid, string cardID)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+
+            Player1.SetFromHands(cardID);
+
+            await SendMessage(Player1, Player2, uid);
+        }
+
+        public async Task DirectAttack(string uid, int index)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+
+            Player1.DirectAttack(index, Player2);
+
+            await SendMessage(Player1, Player2, uid);
+        }
+
+        public async Task Battle(string uid, int index1, int index2)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+            try
+            {
+                Player1.Battle(index1, index2, Player2);
+            }
+            catch (Exception ex)
+            {
+                await LogError(ex);
+            }
+
+            await SendMessage(Player1, Player2, uid);
+        }
+
+        public async Task EffectSpell(string uid, int index1, int index2)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+
+            Player1.EffectSpell(index1, index2, Player2);
+
+            await SendMessage(Player1, Player2, uid);
+        }
+
+        public async Task ChangePosition(string uid, int index)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+
+            Player1.ChangePosition(index);
+
+            await SendMessage(Player1, Player2, uid);
+        }
+
+        public async Task EndPhase(string uid)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+            Player1.EndPhase();
+            Player2.DrawPhase();
+            Player2.StandByPhase();
+            await SendMessage(Player1, Player2, uid);
         }
 
         public async Task OnlineNumbers()
