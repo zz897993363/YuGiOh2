@@ -18,7 +18,7 @@ export class Duel extends Component {
             chooseMonster: false,
             chooseSpell: false,
             attackerIndex: -1,
-            spellIndex: -1,
+            processing: false,
             detail: false,
             choosedCard: null
         }
@@ -27,13 +27,16 @@ export class Duel extends Component {
         this.effectFromHands = this.effectFromHands.bind(this);
         this.setFromHands = this.setFromHands.bind(this);
         this.attack = this.attack.bind(this);
-        this.choose = this.choose.bind(this);
+        this.attackTarget = this.attackTarget.bind(this);
+        this.effectTarget = this.effectTarget.bind(this);
         this.changePosition = this.changePosition.bind(this);
         this.endPhase = this.endPhase.bind(this);
 
         this.closeDetail = this.closeDetail.bind(this);
         this.atext = { 0: "闇", 1: "光", 2: "地", 3: "水", 4: "炎", 5: "風", 6: "神" };
+        this.acolor = { 0: "#912d8c", 1: "#fff578", 2: "#4c4e4c", 3: "#70caee", 4: "#ff0000", 5: "#8ac89b", 6: "#fff578" };
         this.satext = { 0: "无", 1: "黑", 2: "白", 3: "恶", 4: "幻", 5: "炎", 6: "森", 7: "風", 8: "土", 9: "雷", 10: "水", 11: "神" };
+        this.sacolor = { 0: "white", 1: "#000000", 2: "#e8e8e8", 3: "#912d8c", 4: "#cbbdec", 5: "#ff0000", 6: "#3fbb00", 7: "#b6ffca", 8: "#964f52", 9: "#fbff00", 10: "#70caee", 11: "#a900ff" };
         this.mtype = {
             0: "魔法师", 1: "龙", 2: "不死", 3: "战士", 4: "兽战士", 5: "兽", 6: "鸟兽", 7: "恶魔", 8: "天使", 9: "昆虫",
             10: "恐龙", 11: "爬虫类", 12: "鱼", 13: "海龙", 14: "水", 15: "炎", 16: "雷", 17: "岩石", 18: "植物", 19: "机械",
@@ -109,10 +112,10 @@ export class Duel extends Component {
         if (data.Enable !== true) {
             return;
         }
-        if (data.attackerIndex > -1) {
+        if (this.state.attackerIndex > -1) {
             return;
         }
-        if (data.spellIndex > -1) {
+        if (this.state.processing) {
             return;
         }
         if (!data.PlayerHands || !data.PlayerHands[index]) {
@@ -130,10 +133,10 @@ export class Duel extends Component {
         if (data.Enable !== true) {
             return;
         }
-        if (data.attackerIndex > -1) {
+        if (this.state.attackerIndex > -1) {
             return;
         }
-        if (data.spellIndex > -1) {
+        if (this.state.processing) {
             return;
         }
         if (!data.PlayerHands || !data.PlayerHands[index]) {
@@ -151,6 +154,12 @@ export class Duel extends Component {
         if (data.Enable !== true) {
             return;
         }
+        if (this.state.attackerIndex > -1) {
+            return;
+        }
+        if (this.state.processing) {
+            return;
+        }
         if (!data.PlayerHands || !data.PlayerHands[index]) {
             return;
         }
@@ -164,6 +173,9 @@ export class Duel extends Component {
     attack(index) {
         let data = this.state.data;
         if (data.Enable !== true) {
+            return;
+        }
+        if (this.state.processing) {
             return;
         }
         if (data.PlayerField.MonsterFields[index].Status.AttackChances < 1) {
@@ -183,19 +195,28 @@ export class Duel extends Component {
     }
 
     effectFromField(index) {
-
+        let data = this.state.data;
+        if (data.Enable !== true) {
+            return;
+        }
+        if (this.state.processing) {
+            return;
+        }
+        this.setState({ processing: true })
+        this.connection.invoke("EffectFromField", data.UID, index)
+        this.setState({ processing: false })
     }
 
-    choose(index) {
+    attackTarget(index) {
         if (this.state.attackerIndex > -1) {
             this.connection.invoke("Battle", this.state.data.UID, this.state.attackerIndex, index);
             this.setState({ attackerIndex: -1 });
             return;
         }
-        if (this.state.spellIndex > -1) {
-            this.connection.invoke("EffectSpell", this.state.data.UID, this.state.spellIndex, index);
-            this.setState({ spellIndex: -1 });
-        }
+    }
+
+    effectTarget(targetId) {
+        this.connection.invoke("ProcessEffect", this.state.data.UID, targetId);
     }
 
     changePosition(index) {
@@ -258,25 +279,32 @@ export class Duel extends Component {
                                         onMouseEnter={() => { this.setState({ choosedCard: field.MonsterFields[i] }) }} />
                                 </div>
                                 <div className="mstTxt"
-                                    style={{
-                                        backgroundColor: field.MonsterFields[i].CardType === 1 ? "#cfb256" : "#c4b3aa"
-                                    }}>
+                                    style={{ backgroundColor: field.MonsterFields[i].CardType === 1 ? "#cfb256" : "#c4b3aa" }}>
                                     <div className="mstA">
-                                        {this.atext[field.MonsterFields[i].Attribute]}
-                                        {this.satext[field.MonsterFields[i].SummonedAttribute]}
-                                    </div>
-                                    <div className="mstB">
                                         <div style={{
-                                            color: field.MonsterFields[i].Status.DefensePosition ? "black" : "green"
+                                            backgroundColor: this.acolor[field.MonsterFields[i].Attribute], height: "50%", color: "white"
                                         }}>
-                                            {`ATK:${field.MonsterFields[i].ATK}`}
+                                            {this.atext[field.MonsterFields[i].Attribute]}
                                         </div>
                                         <div style={{
-                                            color: !field.MonsterFields[i].Status.DefensePosition ? "black" : "green"
+                                            backgroundColor: this.sacolor[field.MonsterFields[i].SummonedAttribute], height: "50%", color: "white"
                                         }}>
+                                            {this.satext[field.MonsterFields[i].SummonedAttribute]}
+                                        </div>
+                                    </div>
+                                    <div className="mstB">
+                                        <div style={{ color: field.MonsterFields[i].Status.DefensePosition ? "black" : "green" }}>
+                                            {`ATK:${field.MonsterFields[i].ATK}`}
+                                        </div>
+                                        <div style={{ color: !field.MonsterFields[i].Status.DefensePosition ? "black" : "green" }}>
                                             {`DEF:${field.MonsterFields[i].DEF}`}
                                         </div>
                                     </div>
+                                </div>
+                                <div style={{
+                                    display: this.state.data.ChooseTargetType === 13 ? "block" : "none"
+                                }}>
+                                    <button onClick={evt => this.effectTarget(field.MonsterFields[i].UID)}>选择</button>
                                 </div>
                             </div>) :
                             ""}
@@ -349,20 +377,36 @@ export class Duel extends Component {
                                     backgroundColor: field.MonsterFields[4 - i].CardType === 1 ? "#cfb256" : "#c4b3aa"
                                 }}>
                                     <div className="mstB">
-                                        <div>{`ATK:${field.MonsterFields[4 - i].Status.FaceDown ?
+                                        <div style={{
+                                            color: field.MonsterFields[4 - i].Status.DefensePosition ? "black" : "green"
+                                        }}>{`ATK:${field.MonsterFields[4 - i].Status.FaceDown ?
                                             "????" :
                                             field.MonsterFields[4 - i].ATK}`}</div>
-                                        <div>{`DEF:${field.MonsterFields[4 - i].Status.FaceDown ?
+                                        <div style={{
+                                            color: !field.MonsterFields[4 - i].Status.DefensePosition ? "black" : "green"
+                                        }}>{`DEF:${field.MonsterFields[4 - i].Status.FaceDown ?
                                             "????" :
                                             field.MonsterFields[4 - i].DEF}`}</div>
                                     </div>
                                     <div className="mstA">
-                                        {this.atext[field.MonsterFields[4 - i].Status.FaceDown ?
-                                            "?" :
-                                            field.MonsterFields[4 - i].Attribute]}
-                                        {this.satext[field.MonsterFields[4 - i].Status.FaceDown ?
-                                            "?" :
-                                            field.MonsterFields[4 - i].SummonedAttribute]}
+                                        <div style={{
+                                            backgroundColor: field.MonsterFields[4 - i].Status.FaceDown ?
+                                                "" : this.acolor[field.MonsterFields[4 - i].Attribute],
+                                            height: "50%", color: "white"
+                                        }}>
+                                            {this.atext[field.MonsterFields[4 - i].Status.FaceDown ?
+                                                "?" :
+                                                field.MonsterFields[4 - i].Attribute]}
+                                        </div>
+                                        <div style={{
+                                            backgroundColor: field.MonsterFields[4 - i].Status.FaceDown ?
+                                                "" : this.sacolor[field.MonsterFields[4 - i].SummonedAttribute],
+                                            height: "50%", color: "white"
+                                        }}>
+                                            {this.satext[field.MonsterFields[4 - i].Status.FaceDown ?
+                                                "?" :
+                                                field.MonsterFields[4 - i].SummonedAttribute]}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="mstImg">
@@ -375,11 +419,15 @@ export class Duel extends Component {
                                         } : null} />
                                 </div>
                                 <div style={{ display: (this.state.attackerIndex > -1 ? "block" : "none") }}>
-                                    <button onClick={evt => this.choose(4 - i)}>选择</button>
+                                    <button onClick={evt => this.attackTarget(4 - i)}>攻击</button>
+                                </div>
+                                <div style={{ display: this.state.data.ChooseTargetType === 13 ? "block" : "none" }}>
+                                    <button onClick={evt => this.effectTarget(field.MonsterFields[4 - i].UID)}>选择</button>
                                 </div>
                             </div>) :
-                            ""}
-                    </div>);
+                            ""
+                        }
+                    </div >);
             }
             return squares;
         };
@@ -433,7 +481,7 @@ export class Duel extends Component {
 
         let enemyGrave = () => {
             let grave = this.state.data.EnemyGrave;
-            return (<div id="egy" className="square">
+            return (<div id="egy" style={{ marginRight: "5%" }} className="square">
                 {grave && grave.length > 0 ?
                     (<div>
                         {grave[grave.length - 1].CardCategory === 0 ?
@@ -445,8 +493,16 @@ export class Duel extends Component {
                                     <div>{`DEF:${grave[grave.length - 1].DEF}`}</div>
                                 </div>
                                 <div className="mstA">
-                                    {this.atext[grave[grave.length - 1].Attribute]}
-                                    {this.satext[grave[grave.length - 1].SummonedAttribute]}
+                                    <div style={{
+                                        backgroundColor: this.acolor[grave[grave.length - 1].Attribute], height: "50%", color: "white"
+                                    }}>
+                                        {this.atext[grave[grave.length - 1].Attribute]}
+                                    </div>
+                                    <div style={{
+                                        backgroundColor: this.sacolor[grave[grave.length - 1].SummonedAttribute], height: "50%", color: "white"
+                                    }}>
+                                        {this.satext[grave[grave.length - 1].SummonedAttribute]}
+                                    </div>
                                 </div>
                             </div>) :
                             (<div className="mstTxt"
@@ -470,7 +526,7 @@ export class Duel extends Component {
 
         let playerGrave = () => {
             let grave = this.state.data.PlayerGrave;
-            return (<div id="pgy" className="square">
+            return (<div id="pgy" style={{ marginLeft: "5%" }} className="square">
                 {grave && grave.length > 0 ?
                     (<div>
                         <img src={`/pics/${grave[grave.length - 1].Password}.jpg`} width={100 + "%"} />
@@ -483,8 +539,16 @@ export class Duel extends Component {
                                     <div>{`DEF:${grave[grave.length - 1].DEF}`}</div>
                                 </div>
                                 <div className="mstA">
-                                    {this.atext[grave[grave.length - 1].Attribute]}
-                                    {this.satext[grave[grave.length - 1].SummonedAttribute]}
+                                    <div style={{
+                                        backgroundColor: this.acolor[grave[grave.length - 1].Attribute], height: "50%", color: "white"
+                                    }}>
+                                        {this.atext[grave[grave.length - 1].Attribute]}
+                                    </div>
+                                    <div style={{
+                                        backgroundColor: this.sacolor[grave[grave.length - 1].SummonedAttribute], height: "50%", color: "white"
+                                    }}>
+                                        {this.satext[grave[grave.length - 1].SummonedAttribute]}
+                                    </div>
                                 </div>
                             </div>) :
                             (<div className="mstTxt"
@@ -505,9 +569,9 @@ export class Duel extends Component {
         }
 
         let hpStyle = (hp) => {
-            let style = { fontSize: "20px", color: "green" }
+            let style = { fontSize: "20px", color: "white" }
             if (hp > 4000) {
-                style.color = "green";
+                style.color = "white";
             } else if (hp > 2000) {
                 style.color = "orange";
             } else {
@@ -518,39 +582,34 @@ export class Duel extends Component {
 
         let field =
             <div>
-                <div className="center-block" style={{ display: "table" }}>
-                    <div id="edk" className="square">
+                <div style={{ display: "table", width: "100%" }}>
+                    <div id="edk" style={{ marginRight: "5%" }} className="square">
                         <img src={this.state.data.EnemyDeckCount > 0 ?
                             "/pics/back.jpg" :
                             ""} width={100 + "%"} />
                     </div>
                     {enemySpells()}
-                    <div id="eex" className="square"></div>
+                    <div id="eex" style={{ marginLeft: "5%" }} className="square"></div>
                 </div>
-                <div className="center-block" style={{ display: "table" }}>
+                {this.blank(3)}
+                <div style={{ display: "table", width: "100%" }}>
                     {enemyGrave()}
                     {enemyMonsters()}
-                    <div id="eff" className="square"></div>
+                    <div id="eff" style={{ marginLeft: "5%" }} className="square"></div>
                 </div>
                 <div style={hpStyle(this.state.data.EnemyHP)}>HP:{this.state.data.EnemyHP || 0}</div>
-                {this.blank(10)}
-                <div style={hpStyle(this.state.data.PlayerHP)}>HP:{this.state.data.PlayerHP || 0}
-                    {this.state.data.UID ?
-                        (<Button type="danger" style={{ marginRight: "5%", float: "right" }}
-                            disabled={!this.state.data.Enable}
-                            onClick={this.endPhase}>
-                            {this.state.data.Enable ? "结束回合" : "对手回合"}</Button>
-                        ) : ""}
-                </div>
-                <div className="center-block" style={{ display: "table" }}>
-                    <div id="pff" className="square"></div>
+                {this.blank(3)}
+                <div style={hpStyle(this.state.data.PlayerHP)}>HP:{this.state.data.PlayerHP || 0}</div>
+                <div style={{ display: "table", width: "100%" }}>
+                    <div id="pff" style={{ marginRight: "5%" }} className="square"></div>
                     {playerMonsters()}
                     {playerGrave()}
                 </div>
-                <div className="center-block" style={{ display: "table" }}>
-                    <div id="pex" className="square"></div>
+                {this.blank(3)}
+                <div style={{ display: "table", width: "100%" }}>
+                    <div id="pex" style={{ marginRight: "5%" }} className="square"></div>
                     {playerSpells()}
-                    <div className="bubble square" id="pdk">
+                    <div style={{ marginLeft: "5%" }} className="bubble square" id="pdk">
                         <img src={this.state.data.PlayerDeckCount > 0 ?
                             "/pics/back.jpg" :
                             ""} width={100 + "%"} />
@@ -586,8 +645,12 @@ export class Duel extends Component {
                                     backgroundColor: hands[i].CardType === 1 ? "#cfb256" : "#c4b3aa"
                                 }}>
                                     <div className="mstA">
-                                        {this.atext[hands[i].Attribute]}
-                                        {this.satext[hands[i].SummonedAttribute]}
+                                        <div style={{
+                                            backgroundColor: this.acolor[hands[i].Attribute], height: "50%", color: "white"
+                                        }}>{this.atext[hands[i].Attribute]}</div>
+                                        <div style={{
+                                            backgroundColor: this.sacolor[hands[i].SummonedAttribute], height: "50%", color: "white"
+                                        }}>{this.satext[hands[i].SummonedAttribute]}</div>
                                     </div>
                                     <div className="mstB">
                                         <div>{`ATK:${hands[i].ATK}`}</div>
@@ -663,24 +726,25 @@ export class Duel extends Component {
 
         return (
             <div>
-                <div>
-                    <div style={{ color: "white" }}>当前在线人数：{this.state.onlineNums} 人</div>
-                    {this.state.data !== {} ?
-                        (<Button type="primary" onClick={this.standBy}
-                            disabled={this.state.ready}>
-                            {this.state.ready ? "准备中" : "准备"}</Button>
-                        ) : ""}
-                </div>
                 <div className="container">
                     <div className="left">
-                        {card()}
+                        <div>
+                            <div style={{ color: "white" }}>当前在线人数：{this.state.onlineNums} 人</div>
+                            {this.state.data !== {} ?
+                                (<Button type="primary" onClick={this.standBy}
+                                    disabled={this.state.ready}>
+                                    {this.state.ready ? "准备中" : "准备"}</Button>
+                                ) : ""}
+                        </div>
+                        <div style={{ transform: "translate(0, 150px)" }}>
+                            {card()}
+                        </div>
                     </div>
-                    <div className="middle">
-
+                    <div className="middle" style={{ display: this.state.data.UID ? "block" : "none" }}>
                         {enemyHands()}
-                        {this.blank(5)}
+                        {this.blank(4)}
                         {field}
-                        {this.blank(5)}
+                        {this.blank(4)}
                         {playerHands()}
                     </div>
                     <Modal
@@ -691,12 +755,21 @@ export class Duel extends Component {
                         {card()}
                     </Modal>
                     <div className="right">
-                        <textarea id="msg" value={this.state.log} readOnly={true} style={{ height: "700px", width: 100 + "%", resize: "none" }}>
-                        </textarea>
+
+                        {this.state.data.UID ?
+                            (<div>
+                                <textarea id="msg" value={this.state.log} readOnly={true} style={{ height: "700px", width: 100 + "%", resize: "none" }}>
+                                </textarea>
+                                {this.blank(3)}
+                                <Button type="danger" style={{ marginTop: "5%" }}
+                                    disabled={!this.state.data.Enable}
+                                    onClick={this.endPhase}>
+                                    {this.state.data.Enable ? "结束回合" : "对手回合"}</Button>
+                            </div>) :
+                            ""}
                     </div>
                 </div>
             </div>
         );
     }
-
 }

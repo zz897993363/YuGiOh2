@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using YuGiOh2.Base;
 
@@ -51,6 +52,15 @@ namespace YuGiOh2.Data
             if (_cards == null)
                 _cards = DBContext.Card.ToList();
             return _cards;
+        }
+
+        internal static void ProcessEffect(string cardID, Player player1, Player player2)
+        {
+            Card card = player1.Field.SpellAndTrapFields.FirstOrDefault(c => c.UID == cardID);
+            string className = "C" + card.Password;
+            Type type = Type.GetType(className);
+            MethodInfo methodInfo = type.GetMethod("ProcessEffect");
+            methodInfo.Invoke(null, new object[] { card, player1, player2 });
         }
     }
 

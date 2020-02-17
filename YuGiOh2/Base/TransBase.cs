@@ -22,6 +22,7 @@ namespace YuGiOh2.Base
         public Field EnemyField { get; set; }
         public List<Card> PlayerGrave { get; set; }
         public List<Card> EnemyGrave { get; set; }
+        public int ChooseTargetType { get; set; }
     }
 
     public class MessageFactory
@@ -33,6 +34,7 @@ namespace YuGiOh2.Base
         {
             faceDownM = new MonsterCard();
             faceDownM.Status.FaceDown = true;
+            faceDownM.Status.DefensePosition = true;
             faceDownSAT = new SpellAndTrapCard();
             faceDownSAT.Status.FaceDown = true;
         }
@@ -50,6 +52,7 @@ namespace YuGiOh2.Base
                 message.CanSummon = player.CanSummon;
                 message.Enable = player.YourTurn;
                 message.FirstTurn = player.FirstTurn;
+                message.ChooseTargetType = player.ChooseTarget;
             }
             if (enemy != null)
             {

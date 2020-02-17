@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using YuGiOh2.Base;
 using Newtonsoft.Json;
+using System.Threading;
 
 namespace YuGiOh2.Hubs
 {
@@ -111,7 +112,15 @@ namespace YuGiOh2.Hubs
                 return;
 
             Player1.SummonMonsterFromHands(cardID);
-            
+
+            Player1.CheckTrapsWhenSummoned();
+            if (Player2.EffectingCard != null)
+            {
+                await SendMessage(Player1, Player2, uid);
+                Thread.Sleep(500);
+                Player2.ProcessEffect(null);
+            }
+
             await SendMessage(Player1, Player2, uid);
         }
 
@@ -123,6 +132,37 @@ namespace YuGiOh2.Hubs
             Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
 
             Player1.EffectFromHands(cardID);
+
+            if (Player1.ChooseTarget == 0)
+            {
+                await SendMessage(Player1, Player2, uid);
+                Thread.Sleep(1000);
+                Player1.ProcessEffect(null);
+            }
+
+            await SendMessage(Player1, Player2, uid);
+        }
+
+        public async Task EffectFromField(string uid, int index)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+
+            Player1.EffectFromFields(uid, index);
+
+            await SendMessage(Player1, Player2, uid);
+        }
+
+        public async Task ProcessEffect(string uid, string targetID)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+
+            Player1.ProcessEffect(targetID);
 
             await SendMessage(Player1, Player2, uid);
         }
@@ -146,7 +186,17 @@ namespace YuGiOh2.Hubs
             Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
             Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
 
-            Player1.DirectAttack(index, Player2);
+            Player1.CheckTrapsWhenAttack();
+            if (Player2.EffectingCard != null)
+            {
+                await SendMessage(Player1, Player2, uid);
+                Thread.Sleep(500);
+                Player2.ProcessEffect(null);
+            }
+            else
+            {
+                Player1.DirectAttack(index);
+            }
 
             await SendMessage(Player1, Player2, uid);
         }
@@ -160,24 +210,22 @@ namespace YuGiOh2.Hubs
             Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
             try
             {
-                Player1.Battle(index1, index2, Player2);
+                Player1.CheckTrapsWhenAttack();
+                if (Player2.EffectingCard != null)
+                {
+                    await SendMessage(Player1, Player2, uid);
+                    Thread.Sleep(500);
+                    Player2.ProcessEffect(null);
+                }
+                else
+                {
+                    Player1.Battle(index1, index2);
+                }
             }
             catch (Exception ex)
             {
                 await LogError(ex);
             }
-
-            await SendMessage(Player1, Player2, uid);
-        }
-
-        public async Task EffectSpell(string uid, int index1, int index2)
-        {
-            string playerID = Context.ConnectionId;
-            Game game = Games[uid];
-            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
-            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
-
-            Player1.EffectSpell(index1, index2, Player2);
 
             await SendMessage(Player1, Player2, uid);
         }

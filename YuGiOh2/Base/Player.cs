@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection;
 using YuGiOh2.Data;
 
 namespace YuGiOh2.Base
@@ -14,10 +14,31 @@ namespace YuGiOh2.Base
         public List<Card> Grave { get; set; }
         public List<Card> Deck { get; set; }
         public List<Card> Hands { get; set; }
+        public Player Enemy { get; set; }
         public bool CanSummon { get; set; }
         public bool Lose { get; set; }
         public bool YourTurn { get; set; }
         public bool FirstTurn { get; set; }
+        /// <summary>
+        /// 取对象的范围
+        /// </summary>
+        public int ChooseTarget { get; set; }
+        /// <summary>
+        /// 正在发动中的卡牌
+        /// </summary>
+        public Card EffectingCard { get; set; }
+        /// <summary>
+        /// 处理当回合有效的效果结算
+        /// </summary>
+        public Queue<Tuple<MethodInfo, string>> EndPhaseProcessedCard { get; set; }
+        /// <summary>
+        /// 在召唤时触发的陷阱
+        /// </summary>
+        public Queue<SpellAndTrapCard> TrapsWhenSummoned { get; set; }
+        /// <summary>
+        /// 在攻击时触发的陷阱
+        /// </summary>
+        public Queue<SpellAndTrapCard> TrapsWhenAttack { get; set; }
         public Player(ICollection<Card> cards = null, string id = null, int hp = 8000)
         {
             ID = id;
@@ -26,6 +47,9 @@ namespace YuGiOh2.Base
             Grave = new List<Card>();
             Deck = new List<Card>(cards ?? new Card[] { });
             Hands = new List<Card>();
+            EndPhaseProcessedCard = new Queue<Tuple<MethodInfo, string>>();
+            TrapsWhenSummoned = new Queue<SpellAndTrapCard>();
+            TrapsWhenAttack = new Queue<SpellAndTrapCard>();
         }
 
         public void DrawPhase()
@@ -52,6 +76,11 @@ namespace YuGiOh2.Base
 
         public void EndPhase()
         {
+            while (EndPhaseProcessedCard.Count > 0)
+            {
+                var t = EndPhaseProcessedCard.Dequeue();
+                t.Item1.Invoke(null, new object[] { null, t.Item2, this, Enemy });
+            }
             while (Hands.Count > 5)
             {
                 DiscardHands();
@@ -134,6 +163,26 @@ namespace YuGiOh2.Base
             Card card = Hands.FirstOrDefault(c => c.UID == UID);
             Hands.Remove(card);
             Field.SpellAndTrapFields[fieldIndex] = (SpellAndTrapCard)card;
+
+            EffectFromFields(UID, fieldIndex);
+        }
+
+        public void EffectFromFields(string UID, int fieldIndex)
+        {
+            Field.SpellAndTrapFields[fieldIndex].Status.FaceDown = false;
+            EffectingCard = Field.SpellAndTrapFields[fieldIndex];
+            Type type = Type.GetType("YuGiOh2.Cards.C" + Field.SpellAndTrapFields[fieldIndex].Password);
+            MethodInfo methodInfo = type.GetMethod("CheckIfAvailable");
+            bool availbale = (bool)methodInfo.Invoke(null, new object[] { Field.SpellAndTrapFields[fieldIndex], this, Enemy });
+            if (availbale)
+            {
+                PropertyInfo propertyInfo = type.GetProperty("Type");
+                ChooseTarget = (int)propertyInfo.GetValue(null);
+            }
+            else
+            {
+                ChooseTarget = 0;
+            }
         }
 
         public void EffectFromHands(string UID)
@@ -147,6 +196,31 @@ namespace YuGiOh2.Base
                     break;
                 }
             }
+        }
+
+        public void ProcessEffect(string targetID)
+        {
+            ChooseTarget = 0;
+            Type type = Type.GetType("YuGiOh2.Cards.C" + EffectingCard.Password);
+            MethodInfo methodInfo = type.GetMethod("ProcessEffect");
+            methodInfo.Invoke(null, new object[] { EffectingCard, targetID, this, Enemy });
+            for (int i = 0; i < 5; i++)
+            {
+                if (Field.SpellAndTrapFields[i] == null)
+                    continue;
+
+                if (Field.SpellAndTrapFields[i].UID == EffectingCard.UID)
+                {
+                    Grave.Add(Field.SpellAndTrapFields[i]);
+                    Field.SpellAndTrapFields[i] = null;
+                }
+            }
+            methodInfo = type.GetMethod("ProcessEndPhase");
+            if (methodInfo != null)
+            {
+                EndPhaseProcessedCard.Enqueue(new Tuple<MethodInfo, string>(methodInfo, targetID));
+            }
+            EffectingCard = null;
         }
 
         public void SetFromHands(string UID)
@@ -172,6 +246,20 @@ namespace YuGiOh2.Base
                     card.Status.FaceDown = true;
                     Hands.Remove(card);
                     Field.SpellAndTrapFields[num] = card;
+                    if (card.CardCategory == 2)
+                    {
+                        Type type = Type.GetType("YuGiOh2.Cards.C" + card.Password);
+                        PropertyInfo propertyInfo = type.GetProperty("Type");
+                        int mType = (int)propertyInfo.GetValue(null);
+                        if (mType == (int)AffectMomentType.WhenAttacked)
+                        {
+                            TrapsWhenAttack.Enqueue(card);
+                        }
+                        else if (mType == (int)AffectMomentType.WhenSummoned)
+                        {
+                            TrapsWhenSummoned.Enqueue(card);
+                        }
+                    }
                     break;
                 }
             }
@@ -205,25 +293,47 @@ namespace YuGiOh2.Base
             card.Status.CanChangePosition = false;
         }
 
-        public void DirectAttack(int attackerIndex, Player enemy)
+        public void DirectAttack(int attackerIndex)
         {
             MonsterCard card = Field.MonsterFields[attackerIndex];
+            if (card == null)
+                return;
             if (card.Status.AttackChances < 1)
                 return;
             if (card.Status.DefensePosition)
                 return;
-            enemy.DecreaseHP(card.ATK);
+            Enemy.DecreaseHP(card.ATK);
             card.Status.AttackChances--;
         }
 
-        public void Battle(int attackerIndex, int targetIndex, Player enemy)
+        public void CheckTrapsWhenAttack()
+        {
+            if (Enemy.TrapsWhenAttack.Count > 0)
+            {
+                var trap = Enemy.TrapsWhenAttack.Dequeue();
+                trap.Status.FaceDown = false;
+                Enemy.EffectingCard = trap;
+            }
+        }
+
+        public void CheckTrapsWhenSummoned()
+        {
+            if (Enemy.TrapsWhenSummoned.Count > 0)
+            {
+                var trap = Enemy.TrapsWhenSummoned.Dequeue();
+                trap.Status.FaceDown = false;
+                Enemy.EffectingCard = trap;
+            }
+        }
+
+        public void Battle(int attackerIndex, int targetIndex)
         {
             MonsterCard attacker = Field.MonsterFields[attackerIndex];
             if (attacker.Status.AttackChances < 1)
                 return;
             if (attacker.Status.DefensePosition)
                 return;
-            MonsterCard target = enemy.Field.MonsterFields[targetIndex];
+            MonsterCard target = Enemy.Field.MonsterFields[targetIndex];
             int attackerPoint = attacker.ATK;
             int targetPoint = target.Status.DefensePosition ? target.DEF : target.ATK;
             int adv = 0, disadv = 0;
@@ -232,7 +342,6 @@ namespace YuGiOh2.Base
             {
                 adv = (attacker.SummonedAttribute + 1) > 4 ? 1 : (attacker.SummonedAttribute + 1);
                 disadv = (attacker.SummonedAttribute - 1) < 1 ? 4 : (attacker.SummonedAttribute - 1);
-
             }
             else if (attacker.SummonedAttribute >= (int)SummonedAttribute.Fire &&
                 attacker.SummonedAttribute <= (int)SummonedAttribute.Water)
@@ -252,11 +361,11 @@ namespace YuGiOh2.Base
             {
                 if (!target.Status.DefensePosition)
                 {
-                    enemy.DecreaseHP(attackerPoint - targetPoint);
+                    Enemy.DecreaseHP(attackerPoint - targetPoint);
                 }
                 DuelUtils.ResetCard(target);
-                enemy.Grave.Add(target);
-                enemy.Field.MonsterFields[targetIndex] = null;
+                Enemy.Grave.Add(target);
+                Enemy.Field.MonsterFields[targetIndex] = null;
                 attacker.Status.AttackChances--;
                 attacker.Status.CanChangePosition = false;
             }
@@ -284,8 +393,8 @@ namespace YuGiOh2.Base
                     Grave.Add(attacker);
                     Field.MonsterFields[attackerIndex] = null;
                     DuelUtils.ResetCard(target);
-                    enemy.Grave.Add(target);
-                    enemy.Field.MonsterFields[targetIndex] = null;
+                    Enemy.Grave.Add(target);
+                    Enemy.Field.MonsterFields[targetIndex] = null;
                 }
                 else
                 {
@@ -294,11 +403,6 @@ namespace YuGiOh2.Base
                     target.Status.FaceDown = false;
                 }
             }
-        }
-
-        public void EffectSpell(int spellIndex, int targetIndex, Player enemy)
-        {
-
         }
 
         public void Fusion(Card card1, int fieldIndex)

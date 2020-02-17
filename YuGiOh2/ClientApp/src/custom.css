@@ -17,12 +17,12 @@ code {
     background: #fff;
     border: 1px solid #999;
     float: left;
-    height: 116px;
+    height: 139px;
     margin-right: 2px;
     margin-left: 2px;
     padding: 0;
     text-align: center;
-    width: 80px;
+    width: 96px;
 }
 
 .msgBox {
@@ -38,7 +38,7 @@ code {
 }
 
 .mstTxt {
-    height: 36px;
+    height: 44px;
     display: block;
 }
 
@@ -50,7 +50,7 @@ code {
     border-right: solid;
     border-right-color: grey;
     float: left;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .mstB {
@@ -61,7 +61,7 @@ code {
     border-right: solid;
     border-right-color: grey;
     float: left;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .bubble .bubble {
@@ -123,23 +123,22 @@ code {
 
 .left {
     order: -1;
-    flex: 0 1 20%;
+    flex: 0 1 15%;
     margin-left: 5%;
-    margin-right: 10%;
-    height: 90%;
-    transform: translate(0, 150px);
+    margin-right: 7%;
+    height: 100%;
 }
 
 .middle {
     flex-grow: 1;
-    height: 90%;
+    height: 100%;
 }
 
 .right {
     flex: 0 1 10%;
     margin-left: 5%;
     margin-right: 10%;
-    height: 90%;
+    height: 100%;
     transform: translate(0, 150px);
 }
 

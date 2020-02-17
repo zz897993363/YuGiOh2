@@ -124,4 +124,14 @@ namespace YuGiOh2.Base
         AllFaceDownSpellAndTrap,
         AllSpellAndTrap
     }
+
+    public enum AffectMomentType
+    {
+        /// <summary>
+        /// 无法主动发动
+        /// </summary>
+        None,
+        WhenSummoned,
+        WhenAttacked
+    }
 }

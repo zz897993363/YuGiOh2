@@ -28,7 +28,8 @@ namespace YuGiOh2.Base
             UID = Guid.NewGuid().ToString();
             Player1 = new Player(null, id1);
             Player2 = new Player(null, id2);
-
+            Player1.Enemy = Player2;
+            Player2.Enemy = Player1;
             BuildDeck(Player1);
             BuildDeck(Player2);
         }
@@ -40,6 +41,9 @@ namespace YuGiOh2.Base
             var spellAndTraps = cardBase.Where(c => c.Category != (int)CardCategory.Monster).ToList();
             int[] check = new int[monsters.Count + spellAndTraps.Count];
             Random rd = new Random();
+            player.Deck.Add(new SpellAndTrapCard(spellAndTraps.FirstOrDefault(c => c.Password == "70046172")));
+            player.Deck.Add(new SpellAndTrapCard(spellAndTraps.FirstOrDefault(c => c.Password == "53582587")));
+            
             for (int i = 0; i < 20; i++)
             {
                 int idx = rd.Next(0, monsters.Count);
