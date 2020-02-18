@@ -108,7 +108,7 @@ namespace YuGiOh2.Base
         {
             while (Hands.Count > 0 && count-- > 0)
             {
-                Card card = Hands[Deck.Count - 1];
+                Card card = Hands[Hands.Count - 1];
                 Hands.Remove(card);
                 Grave.Add(card);
             }
@@ -329,6 +329,8 @@ namespace YuGiOh2.Base
         public void Battle(int attackerIndex, int targetIndex)
         {
             MonsterCard attacker = Field.MonsterFields[attackerIndex];
+            if (attacker == null)
+                return;
             if (attacker.Status.AttackChances < 1)
                 return;
             if (attacker.Status.DefensePosition)

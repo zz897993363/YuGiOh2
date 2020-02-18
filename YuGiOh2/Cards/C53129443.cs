@@ -1,14 +1,21 @@
-﻿using YuGiOh2.Base;
+﻿using System.Linq;
+using YuGiOh2.Base;
 using YuGiOh2.Data;
 
 namespace YuGiOh2.Cards
 {
     /// <summary>
-    /// 激流葬
+    /// 黑洞
     /// </summary>
-    public class C53582587
+    public class C53129443
     {
-        public static int Type { get; } = (int)AffectMomentType.WhenSummoned;
+        public static int Type { get; } = (int)ChooseTargetType.None;
+
+        public static bool CheckIfAvailable(Card card, Player player, Player enemy)
+        {
+            return enemy.Field.MonsterFields.Any(c => c != null) ||
+                player.Field.MonsterFields.Any(c => c != null);
+        }
 
         public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
         {

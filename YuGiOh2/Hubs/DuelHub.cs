@@ -118,7 +118,7 @@ namespace YuGiOh2.Hubs
             {
                 await SendMessage(Player1, Player2, uid);
                 Thread.Sleep(500);
-                Player2.ProcessEffect(null);
+                Player2.ProcessEffect(cardID);
             }
 
             await SendMessage(Player1, Player2, uid);
@@ -191,7 +191,8 @@ namespace YuGiOh2.Hubs
             {
                 await SendMessage(Player1, Player2, uid);
                 Thread.Sleep(500);
-                Player2.ProcessEffect(null);
+                string targetID = Player1.Field.MonsterFields[index].UID;
+                Player2.ProcessEffect(targetID);
             }
             else
             {
@@ -215,7 +216,8 @@ namespace YuGiOh2.Hubs
                 {
                     await SendMessage(Player1, Player2, uid);
                     Thread.Sleep(500);
-                    Player2.ProcessEffect(null);
+                    string targetID = Player1.Field.MonsterFields[index1].UID;
+                    Player2.ProcessEffect(targetID);
                 }
                 else
                 {

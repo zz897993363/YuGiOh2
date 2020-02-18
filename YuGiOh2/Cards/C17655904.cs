@@ -1,18 +1,24 @@
-﻿using YuGiOh2.Base;
+﻿using System.Linq;
+using YuGiOh2.Base;
 using YuGiOh2.Data;
 
 namespace YuGiOh2.Cards
 {
     /// <summary>
-    /// 激流葬
+    /// 毁灭之爆裂疾风弹
     /// </summary>
-    public class C53582587
+    public class C17655904
     {
-        public static int Type { get; } = (int)AffectMomentType.WhenSummoned;
+        public static int Type { get; } = (int)ChooseTargetType.None;
+
+        public static bool CheckIfAvailable(Card card, Player player, Player enemy)
+        {
+            return enemy.Field.MonsterFields.Any(c => c != null) &&
+                player.Field.MonsterFields.Any(c => c != null && c.Password == "89631139" && !c.Status.FaceDown);
+        }
 
         public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
         {
-            Destroy(player);
             Destroy(enemy);
         }
 
