@@ -42,6 +42,19 @@ namespace YuGiOh2.Cards
                     player.Field.SpellAndTrapFields[i] = null;
                 }
             }
+            if (player.Field.FieldField != null)
+            {
+                if (!player.Field.FieldField.Status.FaceDown)
+                {
+                    player.Enemy.ProcessEnemyField();
+                }
+                else
+                {
+                    DuelUtils.ResetCard(player.Field.FieldField);
+                    player.Grave.Add(player.Field.FieldField);
+                    player.Field.FieldField = null;
+                }
+            }
             player.DiscardHands(player.Hands.Count);
         }
     }

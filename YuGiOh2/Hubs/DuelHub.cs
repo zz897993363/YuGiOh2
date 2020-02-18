@@ -112,8 +112,9 @@ namespace YuGiOh2.Hubs
                 return;
 
             Player1.SummonMonsterFromHands(cardID);
-
-            Player1.CheckTrapsWhenSummoned();
+            Player1.ProcessContinuousEffectWhenSummon(cardID);
+            Player2.ProcessContinuousEffectWhenSummon(cardID);
+            Player1.CheckTrapsWhenSummon();
             if (Player2.EffectingCard != null)
             {
                 await SendMessage(Player1, Player2, uid);
@@ -150,7 +151,14 @@ namespace YuGiOh2.Hubs
             Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
             Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
 
-            Player1.EffectFromFields(uid, index);
+            Player1.EffectFromField(index);
+
+            if (Player1.ChooseTarget == 0)
+            {
+                await SendMessage(Player1, Player2, uid);
+                Thread.Sleep(1000);
+                Player1.ProcessEffect(null);
+            }
 
             await SendMessage(Player1, Player2, uid);
         }
@@ -186,13 +194,17 @@ namespace YuGiOh2.Hubs
             Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
             Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
 
+            MonsterCard card = Player1.Field.MonsterFields[index];
+            if (card == null)
+                return;
+            Player1.ProcessContinuousEffectWhenAttack(card.UID);
+            Player2.ProcessContinuousEffectWhenAttack(card.UID);
             Player1.CheckTrapsWhenAttack();
             if (Player2.EffectingCard != null)
             {
                 await SendMessage(Player1, Player2, uid);
                 Thread.Sleep(500);
-                string targetID = Player1.Field.MonsterFields[index].UID;
-                Player2.ProcessEffect(targetID);
+                Player2.ProcessEffect(card.UID);
             }
             else
             {
@@ -211,13 +223,23 @@ namespace YuGiOh2.Hubs
             Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
             try
             {
+                MonsterCard card1 = Player1.Field.MonsterFields[index1];
+                MonsterCard card2 = Player2.Field.MonsterFields[index2];
+                if (card1 == null)
+                    return;
+                if (card2 == null)
+                {
+                    await DirectAttack(uid, index1);
+                    return;
+                }
+                Player1.ProcessContinuousEffectWhenAttack(card1.UID);
+                Player2.ProcessContinuousEffectWhenAttack(card1.UID);
                 Player1.CheckTrapsWhenAttack();
                 if (Player2.EffectingCard != null)
                 {
                     await SendMessage(Player1, Player2, uid);
                     Thread.Sleep(500);
-                    string targetID = Player1.Field.MonsterFields[index1].UID;
-                    Player2.ProcessEffect(targetID);
+                    Player2.ProcessEffect(card1.UID);
                 }
                 else
                 {
@@ -239,7 +261,11 @@ namespace YuGiOh2.Hubs
             Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
             Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
 
-            Player1.ChangePosition(index);
+            MonsterCard card = Player1.Field.MonsterFields[index];
+            if (card == null)
+                return;
+
+            Player1.ChangePosition(card);
 
             await SendMessage(Player1, Player2, uid);
         }

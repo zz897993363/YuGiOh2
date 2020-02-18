@@ -9,6 +9,7 @@ namespace YuGiOh2.Cards
     public class C04206964
     {
         public static int Type { get; } = (int)AffectMomentType.WhenSummoned;
+
         public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
         {
             for (int i = 0; i < 5; i++)

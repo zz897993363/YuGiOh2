@@ -18,7 +18,7 @@ namespace YuGiOh2.Cards
 
         public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
         {
-            var min = player.Field.MonsterFields.Min(c => c.ATK);
+            var min = enemy.Field.MonsterFields.Select(c => c == null ? int.MaxValue : c.ATK).Min();
             for (int i = 0; i < 5; i++)
             {
                 if (enemy.Field.MonsterFields[i] == null || enemy.Field.MonsterFields[i].ATK != min)

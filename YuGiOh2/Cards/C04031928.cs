@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using YuGiOh2.Base;
 using YuGiOh2.Data;
 
@@ -23,7 +20,7 @@ namespace YuGiOh2.Cards
         {
             for (int i = 0; i < 5; i++)
             {
-                if (enemy.Field.MonsterFields[i].UID == targetID)
+                if (enemy.Field.MonsterFields[i]?.UID == targetID)
                 {
                     if (player.Field.MonsterFields.All(c => c != null))
                     {

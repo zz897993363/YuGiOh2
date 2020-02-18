@@ -302,7 +302,10 @@ export class Duel extends Component {
                                     </div>
                                 </div>
                                 <div style={{
-                                    display: this.state.data.ChooseTargetType === 13 ? "block" : "none"
+                                    display: data.ChooseTargetType === 3 ||
+                                        (data.ChooseTargetType === 1 || data.ChooseTargetType === 13) && !field.MonsterFields[i].Status.FaceDown ||
+                                        (data.ChooseTargetType === 2 || data.ChooseTargetType === 14) && field.MonsterFields[i].Status.FaceDown ||
+                                        data.ChooseTargetType === 15 ? "block" : "none"
                                 }}>
                                     <button onClick={evt => this.effectTarget(field.MonsterFields[i].UID)}>选择</button>
                                 </div>
@@ -329,34 +332,126 @@ export class Duel extends Component {
                                         ""}
                                     <button onClick={evt => this.showDetail(field.SpellAndTrapFields[i])}>详细</button>
                                 </div>
+                                <div className="mstImg">
+                                    <img src={field.SpellAndTrapFields[i].Status.FaceDown ?
+                                        `/pics/back.jpg` :
+                                        `/pics/${field.SpellAndTrapFields[i].Password}.jpg`}
+                                        width={100 + "%"}
+                                        onMouseEnter={() => { this.setState({ choosedCard: field.SpellAndTrapFields[i] }) }} />
+                                </div>
                                 {field.SpellAndTrapFields[i].Status.FaceDown ?
-                                    <div className="mstImg">
-                                        <img src={`/pics/back.jpg`} width={100 + "%"}
-                                            onMouseEnter={() => { this.setState({ choosedCard: field.SpellAndTrapFields[i] }) }} />
-                                    </div> :
-                                    <div>
-                                        <div className="mstImg">
-                                            <img src={`/pics/${field.SpellAndTrapFields[i].Password}.jpg`} width={100 + "%"}
-                                                onMouseEnter={() => { this.setState({ choosedCard: field.SpellAndTrapFields[i] }) }} />
+                                    "" :
+                                    (<div className="mstTxt"
+                                        style={{
+                                            backgroundColor: field.SpellAndTrapFields[i].CardCategory === 1 ? "#10797c" : "#a8418b"
+                                        }}>
+                                        <div style={{ color: "white", transform: "translate(0, 50%)" }}>
+                                            {field.SpellAndTrapFields[i].CardCategory === 1 ? "魔法卡" : "陷阱卡"}
                                         </div>
-                                        <div className="mstTxt"
-                                            style={{
-                                                backgroundColor: field.SpellAndTrapFields[i].CardCategory === 1 ? "#10797c" : "#a8418b"
-                                            }}>
-                                            <div style={{
-                                                color: "white",
-                                                transform: "translate(0, 50%)"
-                                            }}>
-                                                {field.SpellAndTrapFields[i].CardCategory === 1 ? "魔法卡" : "陷阱卡"}
-                                            </div>
-                                        </div>
-                                    </div>}
+                                    </div>)}
+                                <div style={{
+                                    display: data.ChooseTargetType === 6 ||
+                                        (data.ChooseTargetType === 4 || data.ChooseTargetType === 16) && !field.SpellAndTrapFields[i].Status.FaceDown ||
+                                        (data.ChooseTargetType === 5 || data.ChooseTargetType === 17) && field.SpellAndTrapFields[i].Status.FaceDown ||
+                                        data.ChooseTargetType === 18 ? "block" : "none"
+                                }}>
+                                    <button onClick={evt => this.effectTarget(field.SpellAndTrapFields[i].UID)}>选择</button>
+                                </div>
                             </div>) :
                             ""}
                     </div>);
             }
             return squares;
         };
+
+        let playerFieldField = () => {
+            let data = this.state.data;
+            let field = this.state.data.PlayerField;
+            let hasCard = field && field.FieldField;
+            let content = hasCard ?
+                (<div className="bubble">
+                    <div className="bubble">
+                        {field.FieldField.Status.FaceDown ?
+                            <button onClick={evt => this.effectFromField(5)}>发动</button> :
+                            ""}
+                        <button onClick={evt => this.showDetail(field.FieldField)}>详细</button>
+                    </div>
+                    <div className="mstImg">
+                        <img src={field.FieldField.Status.FaceDown ?
+                            `/pics/back.jpg` :
+                            `/pics/${field.FieldField.Password}.jpg`
+                        }
+                            width={100 + "%"}
+                            onMouseEnter={() => { this.setState({ choosedCard: field.FieldField }) }} />
+                    </div>
+                    {field.FieldField.Status.FaceDown ?
+                        "" :
+                        (<div className="mstTxt" style={{ backgroundColor: "#10797c" }}>
+                            <div style={{ color: "white", transform: "translate(0, 50%)" }}>魔法卡</div>
+                        </div>)}
+                    <div style={{
+                        display: data.ChooseTargetType === 6 ||
+                            (data.ChooseTargetType === 4 || data.ChooseTargetType === 16) && !field.FieldField.Status.FaceDown ||
+                            (data.ChooseTargetType === 5 || data.ChooseTargetType === 17) && field.FieldField.Status.FaceDown ||
+                            data.ChooseTargetType === 18 ? "block" : "none"
+                    }}>
+                        <button onClick={evt => this.effectTarget(field.FieldField.UID)}>选择</button>
+                    </div>
+                </div>) :
+                "";
+
+            return (
+                <div id="pff" style={{ marginRight: "5%" }} className="square">
+                    {content}
+                </div>);
+        };
+
+        let playerGrave = () => {
+            let grave = this.state.data.PlayerGrave;
+            return (<div id="pgy" style={{ marginLeft: "5%" }} className="square">
+                {grave && grave.length > 0 ?
+                    (<div className="bubble">
+                        <div className="bubble">
+                            <button onClick={evt => this.showDetail(grave[grave.length - 1])}>详细</button>
+                        </div>
+                        <img src={`/pics/${grave[grave.length - 1].Password}.jpg`} width={100 + "%"} />
+                        {grave[grave.length - 1].CardCategory === 0 ?
+                            (<div className="mstTxt" style={{
+                                backgroundColor: grave[grave.length - 1].CardType === 1 ? "#cfb256" : "#c4b3aa"
+                            }}>
+                                <div className="mstB">
+                                    <div>{`ATK:${grave[grave.length - 1].ATK}`}</div>
+                                    <div>{`DEF:${grave[grave.length - 1].DEF}`}</div>
+                                </div>
+                                <div className="mstA">
+                                    <div style={{
+                                        backgroundColor: this.acolor[grave[grave.length - 1].Attribute], height: "50%", color: "white"
+                                    }}>
+                                        {this.atext[grave[grave.length - 1].Attribute]}
+                                    </div>
+                                    <div style={{
+                                        backgroundColor: this.sacolor[grave[grave.length - 1].SummonedAttribute], height: "50%", color: "white"
+                                    }}>
+                                        {this.satext[grave[grave.length - 1].SummonedAttribute]}
+                                    </div>
+                                </div>
+                            </div>) :
+                            (<div className="mstTxt"
+                                style={{
+                                    backgroundColor: grave[grave.length - 1].CardCategory === 1 ? "#10797c" : "#a8418b"
+                                }}>
+                                <div style={{
+                                    color: "white",
+                                    transform: "translate(0, 50%)"
+                                }}>
+                                    {grave[grave.length - 1].CardCategory === 1 ? "魔法卡" : "陷阱卡"}
+                                </div>
+                            </div>)}
+                    </div>) :
+                    ""
+                }
+            </div>);
+        }
 
         let enemyMonsters = () => {
             let data = this.state.data;
@@ -421,7 +516,12 @@ export class Duel extends Component {
                                 <div style={{ display: (this.state.attackerIndex > -1 ? "block" : "none") }}>
                                     <button onClick={evt => this.attackTarget(4 - i)}>攻击</button>
                                 </div>
-                                <div style={{ display: this.state.data.ChooseTargetType === 13 ? "block" : "none" }}>
+                                <div style={{
+                                    display: data.ChooseTargetType === 9 ||
+                                        (data.ChooseTargetType === 7 || data.ChooseTargetType === 13) && !field.MonsterFields[4 - i].Status.FaceDown ||
+                                        (data.ChooseTargetType === 8 || data.ChooseTargetType === 14) && field.MonsterFields[4 - i].Status.FaceDown ||
+                                        data.ChooseTargetType === 15 ? "block" : "none"
+                                }}>
                                     <button onClick={evt => this.effectTarget(field.MonsterFields[4 - i].UID)}>选择</button>
                                 </div>
                             </div>) :
@@ -448,30 +548,33 @@ export class Duel extends Component {
                                     </div>) :
                                     ""}
                                 {field.SpellAndTrapFields[4 - i].Status.FaceDown ?
-                                    <div className="mstImg">
-                                        <img src={`/pics/back.jpg`}
-                                            width={100 + "%"} style={{ transform: "rotate(180deg)" }} />
-                                    </div> :
-                                    <div>
-                                        <div className="mstTxt"
-                                            style={{
-                                                backgroundColor: field.SpellAndTrapFields[4 - i].CardCategory === 1 ? "#10797c" : "#a8418b"
-                                            }}>
-                                            <div style={{
-                                                color: "white",
-                                                transform: "translate(0, 50%)"
-                                            }}>
-                                                {field.SpellAndTrapFields[4 - i].CardCategory === 1 ? "魔法卡" : "陷阱卡"}
-                                            </div>
+                                    "" :
+                                    (<div className="mstTxt"
+                                        style={{
+                                            backgroundColor: field.SpellAndTrapFields[4 - i].CardCategory === 1 ? "#10797c" : "#a8418b"
+                                        }}>
+                                        <div style={{ color: "white", transform: "translate(0, 50%)" }}>
+                                            {field.SpellAndTrapFields[4 - i].CardCategory === 1 ? "魔法卡" : "陷阱卡"}
                                         </div>
-                                        <div className="mstImg">
-                                            <img src={`/pics/${field.SpellAndTrapFields[4 - i].Password}.jpg`}
-                                                width={100 + "%"} style={{ transform: "rotate(180deg)" }}
-                                                onMouseEnter={!field.SpellAndTrapFields[4 - i].Status.FaceDown ? () => {
-                                                    this.setState({ choosedCard: field.SpellAndTrapFields[4 - i] })
-                                                } : null} />
-                                        </div>
-                                    </div>}
+                                    </div>)}
+                                <div className="mstImg">
+                                    <img src={field.SpellAndTrapFields[4 - i].Status.FaceDown ?
+                                        `/pics/back.jpg` :
+                                        `/pics/${field.SpellAndTrapFields[4 - i].Password}.jpg`}
+                                        width={100 + "%"}
+                                        style={{ transform: "rotate(180deg)" }}
+                                        onMouseEnter={!field.SpellAndTrapFields[4 - i].Status.FaceDown ? () => {
+                                            this.setState({ choosedCard: field.SpellAndTrapFields[4 - i] })
+                                        } : null} />
+                                </div>
+                                <div style={{
+                                    display: data.ChooseTargetType === 12 ||
+                                        (data.ChooseTargetType === 10 || data.ChooseTargetType === 16) && !field.SpellAndTrapFields[4 - i].Status.FaceDown ||
+                                        (data.ChooseTargetType === 11 || data.ChooseTargetType === 17) && field.SpellAndTrapFields[4 - i].Status.FaceDown ||
+                                        data.ChooseTargetType === 18 ? "block" : "none"
+                                }}>
+                                    <button onClick={evt => this.effectTarget(field.SpellAndTrapFields[4 - i].UID)}>选择</button>
+                                </div>
                             </div>) :
                             ""}
                     </div>);
@@ -479,11 +582,59 @@ export class Duel extends Component {
             return squares;
         }
 
+        let enemyFieldField = () => {
+            let data = this.state.data;
+            let field = this.state.data.EnemyField;
+            let hasCard = field && field.FieldField;
+            let content = hasCard ?
+                (<div className="bubble">
+                    <div className="bubble">
+                        {!field.FieldField.Status.FaceDown ?
+                            <button onClick={evt => this.effectFromField(5)}>详细</button> :
+                            ""}
+                    </div>
+                    {field.FieldField.Status.FaceDown ?
+                        "" :
+                        (<div className="mstTxt" style={{ backgroundColor: "#10797c" }}>
+                            <div style={{ color: "white", transform: "translate(0, 50%)" }}>魔法卡</div>
+                        </div>)}
+                    <div className="mstImg">
+                        <img src={field.FieldField.Status.FaceDown ?
+                            `/pics/back.jpg` :
+                            `/pics/${field.FieldField.Password}.jpg`
+                        }
+                            width={100 + "%"}
+                            style={{ transform: "rotate(180deg)" }}
+                            onMouseEnter={field.FieldField.Status.FaceDown ?
+                                null :
+                                () => { this.setState({ choosedCard: field.FieldField }) }
+                            } />
+                    </div>
+                    <div style={{
+                        display: data.ChooseTargetType === 12 ||
+                            (data.ChooseTargetType === 10 || data.ChooseTargetType === 16) && !field.FieldField.Status.FaceDown ||
+                            (data.ChooseTargetType === 11 || data.ChooseTargetType === 17) && field.FieldField.Status.FaceDown ||
+                            data.ChooseTargetType === 18 ? "block" : "none"
+                    }}>
+                        <button onClick={evt => this.effectTarget(field.FieldField.UID)}>选择</button>
+                    </div>
+                </div>) :
+                "";
+
+            return (
+                <div id="pff" style={{ marginLeft: "5%" }} className="square">
+                    {content}
+                </div>);
+        };
+
         let enemyGrave = () => {
             let grave = this.state.data.EnemyGrave;
             return (<div id="egy" style={{ marginRight: "5%" }} className="square">
                 {grave && grave.length > 0 ?
-                    (<div>
+                    (<div className="bubble">
+                        <div className="bubble">
+                            <button onClick={evt => this.showDetail(grave[grave.length - 1])}>详细</button>
+                        </div>
                         {grave[grave.length - 1].CardCategory === 0 ?
                             (<div className="mstTxt" style={{
                                 backgroundColor: grave[grave.length - 1].CardType === 1 ? "#cfb256" : "#c4b3aa"
@@ -524,50 +675,6 @@ export class Duel extends Component {
             </div>);
         }
 
-        let playerGrave = () => {
-            let grave = this.state.data.PlayerGrave;
-            return (<div id="pgy" style={{ marginLeft: "5%" }} className="square">
-                {grave && grave.length > 0 ?
-                    (<div>
-                        <img src={`/pics/${grave[grave.length - 1].Password}.jpg`} width={100 + "%"} />
-                        {grave[grave.length - 1].CardCategory === 0 ?
-                            (<div className="mstTxt" style={{
-                                backgroundColor: grave[grave.length - 1].CardType === 1 ? "#cfb256" : "#c4b3aa"
-                            }}>
-                                <div className="mstB">
-                                    <div>{`ATK:${grave[grave.length - 1].ATK}`}</div>
-                                    <div>{`DEF:${grave[grave.length - 1].DEF}`}</div>
-                                </div>
-                                <div className="mstA">
-                                    <div style={{
-                                        backgroundColor: this.acolor[grave[grave.length - 1].Attribute], height: "50%", color: "white"
-                                    }}>
-                                        {this.atext[grave[grave.length - 1].Attribute]}
-                                    </div>
-                                    <div style={{
-                                        backgroundColor: this.sacolor[grave[grave.length - 1].SummonedAttribute], height: "50%", color: "white"
-                                    }}>
-                                        {this.satext[grave[grave.length - 1].SummonedAttribute]}
-                                    </div>
-                                </div>
-                            </div>) :
-                            (<div className="mstTxt"
-                                style={{
-                                    backgroundColor: grave[grave.length - 1].CardCategory === 1 ? "#10797c" : "#a8418b"
-                                }}>
-                                <div style={{
-                                    color: "white",
-                                    transform: "translate(0, 50%)"
-                                }}>
-                                    {grave[grave.length - 1].CardCategory === 1 ? "魔法卡" : "陷阱卡"}
-                                </div>
-                            </div>)}
-                    </div>) :
-                    ""
-                }
-            </div>);
-        }
-
         let hpStyle = (hp) => {
             let style = { fontSize: "20px", color: "white" }
             if (hp > 4000) {
@@ -595,13 +702,13 @@ export class Duel extends Component {
                 <div style={{ display: "table", width: "100%" }}>
                     {enemyGrave()}
                     {enemyMonsters()}
-                    <div id="eff" style={{ marginLeft: "5%" }} className="square"></div>
+                    {enemyFieldField()}
                 </div>
                 <div style={hpStyle(this.state.data.EnemyHP)}>HP:{this.state.data.EnemyHP || 0}</div>
                 {this.blank(3)}
                 <div style={hpStyle(this.state.data.PlayerHP)}>HP:{this.state.data.PlayerHP || 0}</div>
                 <div style={{ display: "table", width: "100%" }}>
-                    <div id="pff" style={{ marginRight: "5%" }} className="square"></div>
+                    {playerFieldField()}
                     {playerMonsters()}
                     {playerGrave()}
                 </div>
@@ -622,7 +729,9 @@ export class Duel extends Component {
             let hands = this.state.data.PlayerHands;
             let cnt = hands ? hands.length : 0;
             let squares = [];
-
+            squares.push(
+                <div className="square" key={0} style={{ marginRight: "3%", visibility: "hidden" }} >
+                </div>);
             for (let i = 0; i < cnt; i++) {
                 squares.push(
                     <div className="bubble square" key={"ph" + i} style={{ marginRight: "3%" }}>
@@ -680,6 +789,9 @@ export class Duel extends Component {
         let enemyHands = () => {
             let cnt = this.state.data.EnemyHandsCount || 0;
             let squares = [];
+            squares.push(
+                <div className="square" key={0} style={{ marginRight: "3%", visibility: "hidden" }} >
+                </div>);
             for (let i = 0; i < cnt; i++) {
                 squares.push(
                     <div className="square" key={"eh" + i} style={{ marginRight: "3%" }}>
