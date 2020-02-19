@@ -18,6 +18,9 @@ namespace YuGiOh2.Cards
 
         public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
         {
+            if (targetID == null)
+                return;
+
             MonsterCard target = player.Field.MonsterFields.FirstOrDefault(c => c != null && c.UID == targetID) ??
                 enemy.Field.MonsterFields.FirstOrDefault(c => c != null && c.UID == targetID);
             if (target == null)
@@ -27,6 +30,9 @@ namespace YuGiOh2.Cards
 
         public static void ProcessEndPhase(Card card, string targetID, Player player, Player enemy)
         {
+            if (targetID == null)
+                return;
+
             MonsterCard target = player.Field.MonsterFields.FirstOrDefault(c => c != null && c.UID == targetID) ??
                 enemy.Field.MonsterFields.FirstOrDefault(c => c != null && c.UID == targetID);
             if (target == null)

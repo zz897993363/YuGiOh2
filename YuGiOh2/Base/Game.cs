@@ -41,7 +41,7 @@ namespace YuGiOh2.Base
             var spellAndTraps = cardBase.Where(c => c.Category != (int)CardCategory.Monster).ToList();
             int[] check = new int[monsters.Count + spellAndTraps.Count];
             Random rd = new Random();
-            player.Deck.Add(new SpellAndTrapCard(spellAndTraps.FirstOrDefault(c => c.Password == "04031928")));
+            player.Deck.Add(new SpellAndTrapCard(spellAndTraps.FirstOrDefault(c => c.Password == "83764718")));
             
             for (int i = 0; i < 20; i++)
             {

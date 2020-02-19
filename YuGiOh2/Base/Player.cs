@@ -383,6 +383,8 @@ namespace YuGiOh2.Base
                     Hands.Remove(card);
                     Field.MonsterFields[num] = card;
                     CanSummon = false;
+                    ProcessContinuousEffectWhenSetMonster(card.UID);
+                    Enemy.ProcessContinuousEffectWhenSetMonster(card.UID);
                     break;
                 }
             }
@@ -409,6 +411,7 @@ namespace YuGiOh2.Base
                 return;
             Enemy.DecreaseHP(card.ATK);
             card.Status.AttackChances--;
+            card.Status.CanChangePosition = false;
         }
 
         public void ProcessContinuousEffectWhenAttack(string cardID)
@@ -429,6 +432,14 @@ namespace YuGiOh2.Base
         public void ProcessContinuousEffectWhenSummon(string cardID)
         {
             foreach (var item in EffectWhenSummon.Values)
+            {
+                item.methodInfo.Invoke(null, new object[] { null, cardID, this, Enemy });
+            }
+        }
+
+        public void ProcessContinuousEffectWhenSetMonster(string cardID)
+        {
+            foreach (var item in EffectWhenSetMonster.Values)
             {
                 item.methodInfo.Invoke(null, new object[] { null, cardID, this, Enemy });
             }

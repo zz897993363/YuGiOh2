@@ -1,9 +1,11 @@
 ﻿import React, { Component } from "react";
 import * as signalR from '@microsoft/signalr';
-import { Button, Modal, Card } from 'antd';
+import { Button, Modal, Card, Carousel, Icon } from 'antd';
 import 'antd/es/button/style/css';
 import 'antd/es/modal/style/css';
 import 'antd/es/card/style/css';
+import 'antd/es/carousel/style/css';
+import 'antd/es/icon/style/css';
 import '../custom.css';
 
 export class Duel extends Component {
@@ -15,12 +17,12 @@ export class Duel extends Component {
             onlineNums: 0,
             log: "",
             data: {},
-            chooseMonster: false,
-            chooseSpell: false,
             attackerIndex: -1,
             processing: false,
             detail: false,
-            choosedCard: null
+            showGrave: false,
+            list: null, //在弹出式对话框中显示的卡片列表
+            focusedCard: null
         }
         this.standBy = this.standBy.bind(this);
         this.summonFromHands = this.summonFromHands.bind(this);
@@ -33,6 +35,10 @@ export class Duel extends Component {
         this.endPhase = this.endPhase.bind(this);
 
         this.closeDetail = this.closeDetail.bind(this);
+        this.closeGrave = this.closeGrave.bind(this);
+        this.next = this.next.bind(this);
+        this.prev = this.prev.bind(this);
+
         this.atext = { 0: "闇", 1: "光", 2: "地", 3: "水", 4: "炎", 5: "風", 6: "神" };
         this.acolor = { 0: "#912d8c", 1: "#fff578", 2: "#4c4e4c", 3: "#70caee", 4: "#ff0000", 5: "#8ac89b", 6: "#fff578" };
         this.satext = { 0: "无", 1: "黑", 2: "白", 3: "恶", 4: "幻", 5: "炎", 6: "森", 7: "風", 8: "土", 9: "雷", 10: "水", 11: "神" };
@@ -128,7 +134,7 @@ export class Duel extends Component {
         this.connection.invoke("SummonFromHands", data.UID, card.UID);
     }
 
-    effectFromHands(index) {
+    async effectFromHands(index) {
         let data = this.state.data;
         if (data.Enable !== true) {
             return;
@@ -146,7 +152,11 @@ export class Duel extends Component {
         if (card.CardCategory === 0) {
             return;
         }
-        this.connection.invoke("EffectFromHands", data.UID, card.UID);
+        this.setState({ processing: true });
+        await this.connection.invoke("EffectFromHands", data.UID, card.UID);
+        if (this.state.data.ChooseTargetType === 0) {
+            this.setState({ processing: false });
+        }
     }
 
     setFromHands(index) {
@@ -194,7 +204,7 @@ export class Duel extends Component {
         this.setState({ attackerIndex: index });
     }
 
-    effectFromField(index) {
+    async effectFromField(index) {
         let data = this.state.data;
         if (data.Enable !== true) {
             return;
@@ -202,9 +212,11 @@ export class Duel extends Component {
         if (this.state.processing) {
             return;
         }
-        this.setState({ processing: true })
-        this.connection.invoke("EffectFromField", data.UID, index)
-        this.setState({ processing: false })
+        this.setState({ processing: true });
+        await this.connection.invoke("EffectFromField", data.UID, index)
+        if (this.state.data.ChooseTargetType === 0) {
+            this.setState({ processing: false });
+        }
     }
 
     attackTarget(index) {
@@ -217,6 +229,7 @@ export class Duel extends Component {
 
     effectTarget(targetId) {
         this.connection.invoke("ProcessEffect", this.state.data.UID, targetId);
+        this.setState({ processing: false });
     }
 
     changePosition(index) {
@@ -244,11 +257,29 @@ export class Duel extends Component {
     }
 
     showDetail(card) {
-        this.setState({ detail: true, choosedCard: card });
+        this.setState({ detail: true, focusedCard: card });
     }
 
     closeDetail() {
         this.setState({ detail: false });
+    }
+
+    openGrave(grave) {
+        if (grave === null || grave.length === 0) {
+            return;
+        }
+        this.setState({ list: grave, showGrave: true });
+    }
+
+    closeGrave() {
+        this.setState({ list: null, showGrave: false });
+    }
+
+    next() {
+        this.slider.slick.slickNext();
+    }
+    prev() {
+        this.slider.slick.slickPrev();
     }
 
     render() {
@@ -263,10 +294,12 @@ export class Duel extends Component {
                         {hasCard ?
                             (<div className="bubble">
                                 <div className="bubble">
-                                    {!field.MonsterFields[i].Status.DefensePosition ?
+                                    {!field.MonsterFields[i].Status.DefensePosition &&
+                                        field.MonsterFields[i].Status.AttackChances > 0 &&
+                                        !this.state.processing ?
                                         <button onClick={evt => this.attack(i)}>攻击</button> :
                                         ""}
-                                    {field.MonsterFields[i].Status.CanChangePosition ?
+                                    {field.MonsterFields[i].Status.CanChangePosition && !this.state.processing ?
                                         <button onClick={evt => this.changePosition(i)}>变更</button> :
                                         ""}
                                     <button onClick={evt => this.showDetail(field.MonsterFields[i])}>详细</button>
@@ -276,7 +309,7 @@ export class Duel extends Component {
                                         "back2" :
                                         field.MonsterFields[i].Password}.jpg`} width={100 + "%"}
                                         style={{ transform: field.MonsterFields[i].Status.DefensePosition ? "rotate(270deg)" : "rotate(0deg)", zIndex: "-1" }}
-                                        onMouseEnter={() => { this.setState({ choosedCard: field.MonsterFields[i] }) }} />
+                                        onMouseEnter={() => { this.setState({ focusedCard: field.MonsterFields[i] }) }} />
                                 </div>
                                 <div className="mstTxt"
                                     style={{ backgroundColor: field.MonsterFields[i].CardType === 1 ? "#cfb256" : "#c4b3aa" }}>
@@ -337,7 +370,7 @@ export class Duel extends Component {
                                         `/pics/back.jpg` :
                                         `/pics/${field.SpellAndTrapFields[i].Password}.jpg`}
                                         width={100 + "%"}
-                                        onMouseEnter={() => { this.setState({ choosedCard: field.SpellAndTrapFields[i] }) }} />
+                                        onMouseEnter={() => { this.setState({ focusedCard: field.SpellAndTrapFields[i] }) }} />
                                 </div>
                                 {field.SpellAndTrapFields[i].Status.FaceDown ?
                                     "" :
@@ -382,7 +415,7 @@ export class Duel extends Component {
                             `/pics/${field.FieldField.Password}.jpg`
                         }
                             width={100 + "%"}
-                            onMouseEnter={() => { this.setState({ choosedCard: field.FieldField }) }} />
+                            onMouseEnter={() => { this.setState({ focusedCard: field.FieldField }) }} />
                     </div>
                     {field.FieldField.Status.FaceDown ?
                         "" :
@@ -412,9 +445,13 @@ export class Duel extends Component {
                 {grave && grave.length > 0 ?
                     (<div className="bubble">
                         <div className="bubble">
-                            <button onClick={evt => this.showDetail(grave[grave.length - 1])}>详细</button>
+                            <button onClick={evt => this.openGrave(grave)}>详细</button>
                         </div>
-                        <img src={`/pics/${grave[grave.length - 1].Password}.jpg`} width={100 + "%"} />
+                        <img
+                            src={`/pics/${grave[grave.length - 1].Password}.jpg`}
+                            width={100 + "%"}
+                            onMouseEnter={() => { this.setState({ focusedCard: grave[grave.length - 1] }) }}
+                        />
                         {grave[grave.length - 1].CardCategory === 0 ?
                             (<div className="mstTxt" style={{
                                 backgroundColor: grave[grave.length - 1].CardType === 1 ? "#cfb256" : "#c4b3aa"
@@ -510,7 +547,7 @@ export class Duel extends Component {
                                         field.MonsterFields[4 - i].Password}.jpg`} width={100 + "%"}
                                         style={{ transform: field.MonsterFields[4 - i].Status.DefensePosition ? "rotate(90deg)" : "rotate(180deg)" }}
                                         onMouseEnter={!field.MonsterFields[4 - i].Status.FaceDown ? () => {
-                                            this.setState({ choosedCard: field.MonsterFields[4 - i] })
+                                            this.setState({ focusedCard: field.MonsterFields[4 - i] })
                                         } : null} />
                                 </div>
                                 <div style={{ display: (this.state.attackerIndex > -1 ? "block" : "none") }}>
@@ -564,7 +601,7 @@ export class Duel extends Component {
                                         width={100 + "%"}
                                         style={{ transform: "rotate(180deg)" }}
                                         onMouseEnter={!field.SpellAndTrapFields[4 - i].Status.FaceDown ? () => {
-                                            this.setState({ choosedCard: field.SpellAndTrapFields[4 - i] })
+                                            this.setState({ focusedCard: field.SpellAndTrapFields[4 - i] })
                                         } : null} />
                                 </div>
                                 <div style={{
@@ -607,7 +644,7 @@ export class Duel extends Component {
                             style={{ transform: "rotate(180deg)" }}
                             onMouseEnter={field.FieldField.Status.FaceDown ?
                                 null :
-                                () => { this.setState({ choosedCard: field.FieldField }) }
+                                () => { this.setState({ focusedCard: field.FieldField }) }
                             } />
                     </div>
                     <div style={{
@@ -633,7 +670,7 @@ export class Duel extends Component {
                 {grave && grave.length > 0 ?
                     (<div className="bubble">
                         <div className="bubble">
-                            <button onClick={evt => this.showDetail(grave[grave.length - 1])}>详细</button>
+                            <button onClick={evt => this.openGrave(grave)}>详细</button>
                         </div>
                         {grave[grave.length - 1].CardCategory === 0 ?
                             (<div className="mstTxt" style={{
@@ -667,8 +704,11 @@ export class Duel extends Component {
                                     {grave[grave.length - 1].CardCategory === 1 ? "魔法卡" : "陷阱卡"}
                                 </div>
                             </div>)}
-                        <img src={`/pics/${grave[grave.length - 1].Password}.jpg`} width={100 + "%"}
-                            style={{ transform: "rotate(180deg)" }} />
+                        <img
+                            src={`/pics/${grave[grave.length - 1].Password}.jpg`} width={100 + "%"}
+                            style={{ transform: "rotate(180deg)" }}
+                            onMouseEnter={() => { this.setState({ focusedCard: grave[grave.length - 1] }) }}
+                        />
                     </div>) :
                     ""
                 }
@@ -737,13 +777,17 @@ export class Duel extends Component {
                     <div className="bubble square" key={"ph" + i} style={{ marginRight: "3%" }}>
                         <div className="bubble">
                             {hands[i] ?
-                                (hands[i].CardCategory === 0 ? <button onClick={evt => this.summonFromHands(i)}>召唤</button> :
+                                (hands[i].CardCategory === 0 && this.state.data.CanSummon && !this.state.processing ?
+                                    <button onClick={evt => this.summonFromHands(i)}>召唤</button> :
                                     (hands[i].CardCategory === 1 ? <button onClick={evt => this.effectFromHands(i)}>发动</button> : "")) :
                                 ""}
-                            <button onClick={evt => this.setFromHands(i)}>放置</button>
+                            {hands[i] ?
+                                ((hands[i].CardCategory !== 0 || this.state.data.CanSummon) && !this.state.processing ?
+                                    <button onClick={evt => this.setFromHands(i)}>放置</button> : "") :
+                                ""}
                             <button onClick={evt => this.showDetail(hands[i])}>详细</button>
                         </div>
-                        <div className="mstImg" onMouseEnter={() => { this.setState({ choosedCard: hands[i] }) }}>
+                        <div className="mstImg" onMouseEnter={() => { this.setState({ focusedCard: hands[i] }) }}>
                             <img src={hands[i] ?
                                 `/pics/${hands[i].Password}.jpg` :
                                 ""} width={100 + "%"} />
@@ -806,7 +850,7 @@ export class Duel extends Component {
         }
 
         let card = () => {
-            let card = this.state.choosedCard;
+            let card = this.state.focusedCard;
             if (card == null)
                 return;
             let content = [];
@@ -834,6 +878,83 @@ export class Duel extends Component {
                     {content}
                     <div style={style}>{card.CardText}</div>
                 </Card>);
+        }
+
+        let selectList = () => {
+            let type = this.state.data.ChooseTargetType;
+            let pg = this.state.data.PlayerGrave;
+            let eg = this.state.data.EnemyGrave;
+            let list = [];
+            if (pg) {
+                for (let i = 0; i < pg.length; i++) {
+                    if (pg[i].CardCategory === type - 19 || pg[i].CardCategory === type - 25) {
+                        list.push(pg[i]);
+                    }
+                }
+            }
+            if (eg) {
+                for (let i = 0; i < eg.length; i++) {
+                    if (eg[i].CardCategory === type - 22 || eg[i].CardCategory === type - 25) {
+                        list.push(eg[i]);
+                    }
+                }
+            }
+            return list;
+        }
+
+        let carousel = (list) => {
+            if (list == null)
+                return;
+
+            const style = {
+                textAlign: "center",
+                fontSize: "15px",
+                width: "100%"
+            };
+            const settings = {
+                dots: true,
+                infinite: true,
+                speed: 500,
+                slidesToShow: 1,
+                slidesToScroll: 1
+            };
+            let cards = [];
+            for (let i = list.length - 1; i >= 0; i--) {
+                let card = list[i];
+                let content = [];
+                if (card.CardCategory === 0) {
+                    content.push(<div key={1}>等级：{card.Level}</div>);
+                    content.push(<div key={2}>攻击力：{card.ATK}</div>);
+                    content.push(<div key={3}>守备力：{card.DEF}</div>);
+                    content.push(<div key={4}>种族：{this.mtype[card.MonsterType] + "族"}</div>);
+                    content.push(<div key={5}>属性：{this.atext[card.Attribute] + "属性"}</div>);
+                    content.push(<div key={6}>召唤魔族：{this.satext[card.SummonedAttribute] + "魔族"}</div>);
+                } else {
+                    content.push(
+                        <div key={7} style={{ textAlign: "center", fontSize: "15px" }}>
+                            {this.icon[card.Icon]}{card.CardCategory == 1 ? "魔法卡" : "陷阱卡"}
+                        </div>);
+                }
+
+                cards.push(
+                    <Card key={i} cover={<img src={`/pics/${card.Password}.jpg`} size="small" />}>
+                        <h4>{card.Cname}/{card.Name}</h4>
+                        {content}
+                        <div style={style}>{card.CardText}</div>
+                        {this.state.processing ?
+                            <Button style={{ marginLeft: "44%" }} onClick={() => this.effectTarget(card.UID)} type="primary">选择</Button> :
+                            ""}
+                    </Card>
+                );
+            }
+            return (
+                <div>
+                    <Carousel {...settings} ref={el => (this.slider = el)}>
+                        {cards}
+                    </Carousel>
+                    <Icon style={{ fontSize: "40px" }} type="left-circle" onClick={this.prev} />
+                    <Icon style={{ fontSize: "40px", float: "right" }} type="right-circle" onClick={this.next} />
+                </div>);
         }
 
         return (
@@ -866,6 +987,22 @@ export class Duel extends Component {
                     >
                         {card()}
                     </Modal>
+                    <Modal
+                        visible={this.state.showGrave && !this.state.processing}
+                        onCancel={this.closeGrave}
+                        footer={null}
+                    >
+                        {carousel(this.state.list)}
+                    </Modal>
+
+                    <Modal
+                        visible={this.state.data.ChooseTargetType >= 19 && this.state.data.ChooseTargetType <= 27}
+                        closable={false}
+                        footer={null}
+                    >
+                        {carousel(selectList())}
+                    </Modal>
+
                     <div className="right">
 
                         {this.state.data.UID ?
@@ -874,7 +1011,7 @@ export class Duel extends Component {
                                 </textarea>
                                 {this.blank(3)}
                                 <Button type="danger" style={{ marginTop: "5%" }}
-                                    disabled={!this.state.data.Enable}
+                                    disabled={!this.state.data.Enable && !this.state.processing}
                                     onClick={this.endPhase}>
                                     {this.state.data.Enable ? "结束回合" : "对手回合"}</Button>
                             </div>) :

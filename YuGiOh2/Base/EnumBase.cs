@@ -105,24 +105,39 @@ namespace YuGiOh2.Base
         /// 无需选取对象
         /// </summary>
         None,
+        
         SelfFaceUpMonster,
         SelfFaceDownMonster,
         SelfMonster,
         SelfFaceUpSpellAndTrap,
         SelfFaceDownSpellAndTrap,
         SelfSpellAndTrap,
+        
         FoeFaceUpMonster,
         FoeFaceDownMonster,
         FoeMonster,
         FoeFaceUpSpellAndTrap,
         FoeFaceDownSpellAndTrap,
         FoeSpellAndTrap,
+
         AllFaceUpMonster,
         AllFaceDownMonster,
         AllMonster,
         AllFaceUpSpellAndTrap,
         AllFaceDownSpellAndTrap,
-        AllSpellAndTrap
+        AllSpellAndTrap,
+
+        SelfMonsterInGrave,
+        SelfSpellInGrave,
+        SelfTrapInGrave,
+        
+        FoeMonsterInGrave,
+        FoeSpellInGrave,
+        FoeTrapInGrave,
+        
+        AllMonsterInGrave,
+        AllSpellInGrave,
+        AllTrapInGrave,
     }
 
     public enum AffectMomentType

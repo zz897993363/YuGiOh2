@@ -12,6 +12,9 @@ namespace YuGiOh2.Cards
 
         public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
         {
+            if (targetID == null)
+                return;
+
             for (int i = 0; i < 5; i++)
             {
                 if (enemy.Field.MonsterFields[i] == null ||

@@ -21,7 +21,9 @@ namespace YuGiOh2.Cards
             var max = enemy.Field.MonsterFields.Select(c => c == null ? 0 : c.DEF).Max();
             for (int i = 0; i < 5; i++)
             {
-                if (enemy.Field.MonsterFields[i] == null || enemy.Field.MonsterFields[i].DEF != max)
+                if (enemy.Field.MonsterFields[i] == null || 
+                    enemy.Field.MonsterFields[i].Status.FaceDown || 
+                    enemy.Field.MonsterFields[i].DEF != max)
                     continue;
 
                 DuelUtils.ResetCard(ref enemy.Field.MonsterFields[i]);
