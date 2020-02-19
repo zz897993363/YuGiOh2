@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using YuGiOh2.Base;
-using YuGiOh2.Data;
 
 namespace YuGiOh2.Cards
 {
@@ -11,16 +10,16 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)ChooseTargetType.None;
 
-        public static bool CheckIfAvailable(Card card, Player player, Player enemy)
+        public static bool CheckIfAvailable(Player player)
         {
-            return enemy.Field.MonsterFields.Any(c => c != null) ||
+            return player.Enemy.Field.MonsterFields.Any(c => c != null) ||
                 player.Field.MonsterFields.Any(c => c != null);
         }
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(Player player)
         {
             Destroy(player);
-            Destroy(enemy);
+            Destroy(player.Enemy);
         }
 
         private static void Destroy(Player player)
@@ -30,8 +29,7 @@ namespace YuGiOh2.Cards
                 if (player.Field.MonsterFields[i] == null)
                     continue;
 
-                DuelUtils.ResetCard(ref player.Field.MonsterFields[i]);
-                player.Grave.Add(player.Field.MonsterFields[i]);
+                player.AddCardToGrave(ref player.Field.MonsterFields[i]);
                 player.Field.MonsterFields[i] = null;
             }
         }

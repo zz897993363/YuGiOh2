@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using YuGiOh2.Base;
-using YuGiOh2.Data;
 
 namespace YuGiOh2.Cards
 {
@@ -11,25 +10,24 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)ChooseTargetType.FoeMonster;
 
-        public static bool CheckIfAvailable(Card card, Player player, Player enemy)
+        public static bool CheckIfAvailable(Player player)
         {
-            return enemy.Field.MonsterFields.Any(c => c != null);
+            return player.Enemy.Field.MonsterFields.Any(c => c != null);
         }
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(string targetID, Player player)
         {
             if (targetID == null)
                 return;
 
             for (int i = 0; i < 5; i++)
             {
-                if (enemy.Field.MonsterFields[i]?.UID == targetID)
+                if (player.Enemy.Field.MonsterFields[i]?.UID == targetID)
                 {
                     if (player.Field.MonsterFields.All(c => c != null))
                     {
-                        DuelUtils.ResetCard(ref enemy.Field.MonsterFields[i]);
-                        enemy.Grave.Add(enemy.Field.MonsterFields[i]);
-                        enemy.Field.MonsterFields[i] = null;
+                        player.Enemy.AddCardToGrave(ref player.Enemy.Field.MonsterFields[i]);
+                        player.Enemy.Field.MonsterFields[i] = null;
                         return;
                     }
                     int[] sort = new int[] { 2, 1, 3, 0, 4 };
@@ -37,8 +35,8 @@ namespace YuGiOh2.Cards
                     {
                         if (player.Field.MonsterFields[num] == null)
                         {
-                            player.Field.MonsterFields[num] = enemy.Field.MonsterFields[i];
-                            enemy.Field.MonsterFields[i] = null;
+                            player.Field.MonsterFields[num] = player.Enemy.Field.MonsterFields[i];
+                            player.Enemy.Field.MonsterFields[i] = null;
                             break;
                         }
                     }

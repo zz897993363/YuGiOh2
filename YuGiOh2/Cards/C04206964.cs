@@ -1,5 +1,4 @@
 ﻿using YuGiOh2.Base;
-using YuGiOh2.Data;
 
 namespace YuGiOh2.Cards
 {
@@ -10,21 +9,20 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)AffectMomentType.WhenSummoned;
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(string targetID, Player player)
         {
             if (targetID == null)
                 return;
 
             for (int i = 0; i < 5; i++)
             {
-                if (enemy.Field.MonsterFields[i] == null ||
-                    enemy.Field.MonsterFields[i].UID != targetID ||
-                    enemy.Field.MonsterFields[i].ATK < 1000)
+                if (player.Enemy.Field.MonsterFields[i] == null ||
+                    player.Enemy.Field.MonsterFields[i].UID != targetID ||
+                    player.Enemy.Field.MonsterFields[i].ATK < 1000)
                     continue;
 
-                DuelUtils.ResetCard(ref enemy.Field.MonsterFields[i]);
-                enemy.Grave.Add(enemy.Field.MonsterFields[i]);
-                enemy.Field.MonsterFields[i] = null;
+                player.Enemy.AddCardToGrave(ref player.Enemy.Field.MonsterFields[i]);
+                player.Enemy.Field.MonsterFields[i] = null;
             }
         }
     }

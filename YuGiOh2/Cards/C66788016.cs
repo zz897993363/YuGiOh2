@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using YuGiOh2.Base;
-using YuGiOh2.Data;
 
 namespace YuGiOh2.Cards
 {
@@ -11,24 +10,23 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)ChooseTargetType.None;
 
-        public static bool CheckIfAvailable(Card card, Player player, Player enemy)
+        public static bool CheckIfAvailable(Player player)
         {
-            return enemy.Field.MonsterFields.Any(c => c != null && !c.Status.FaceDown);
+            return player.Enemy.Field.MonsterFields.Any(c => c != null && !c.Status.FaceDown);
         }
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(Player player)
         {
-            var min = enemy.Field.MonsterFields.Select(c => c == null ? int.MaxValue : c.ATK).Min();
+            var min = player.Enemy.Field.MonsterFields.Select(c => c == null ? int.MaxValue : c.ATK).Min();
             for (int i = 0; i < 5; i++)
             {
-                if (enemy.Field.MonsterFields[i] == null || 
-                    enemy.Field.MonsterFields[i].Status.FaceDown ||
-                    enemy.Field.MonsterFields[i].ATK != min)
+                if (player.Enemy.Field.MonsterFields[i] == null || 
+                    player.Enemy.Field.MonsterFields[i].Status.FaceDown ||
+                    player.Enemy.Field.MonsterFields[i].ATK != min)
                     continue;
 
-                DuelUtils.ResetCard(ref enemy.Field.MonsterFields[i]);
-                enemy.Grave.Add(enemy.Field.MonsterFields[i]);
-                enemy.Field.MonsterFields[i] = null;
+                player.Enemy.AddCardToGrave(ref player.Enemy.Field.MonsterFields[i]);
+                player.Enemy.Field.MonsterFields[i] = null;
                 return;
             }
         }

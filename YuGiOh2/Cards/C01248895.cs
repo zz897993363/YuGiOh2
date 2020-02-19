@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using YuGiOh2.Base;
-using YuGiOh2.Data;
 
 namespace YuGiOh2.Cards
 {
@@ -11,24 +10,24 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; set; } = (int)AffectMomentType.WhenSummoned;
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(string targetID, Player player)
         {
             for (int i = 0; i < 5; i++)
             {
-                if (enemy.Field.MonsterFields[i] == null ||
-                    enemy.Field.MonsterFields[i].UID != targetID ||
-                    enemy.Field.MonsterFields[i].ATK > 2000)
+                if (player.Enemy.Field.MonsterFields[i] == null ||
+                    player.Enemy.Field.MonsterFields[i].UID != targetID ||
+                    player.Enemy.Field.MonsterFields[i].ATK > 2000)
                     continue;
 
-                DuelUtils.ResetCard(ref enemy.Field.MonsterFields[i]);
-                var result = enemy.Deck.Where(c => c.Password == enemy.Field.MonsterFields[i].Password);
-                foreach (var item in result)
+                var result = player.Enemy.Deck.Where(c => c.Password == player.Enemy.Field.MonsterFields[i].Password).ToList();
+                for (int j = result.Count - 1; j >= 0 ; j++)
                 {
-                    enemy.Deck.Remove(item);
+                    var card = result[j];
+                    player.Enemy.AddCardToGrave(ref card);
+                    player.Enemy.Deck.RemoveAt(j);
                 }
-                enemy.Grave.AddRange(result);
-                enemy.Grave.Add(enemy.Field.MonsterFields[i]);
-                enemy.Field.MonsterFields[i] = null;
+                player.Enemy.AddCardToGrave(ref player.Enemy.Field.MonsterFields[i]);
+                player.Enemy.Field.MonsterFields[i] = null;
             }
         }
     }

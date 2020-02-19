@@ -9,12 +9,12 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)ChooseTargetType.None;
 
-        public static bool CheckIfAvailable(Card card, Player player, Player enemy)
+        public static bool CheckIfAvailable(Player player)
         {
             return player.Deck.Count > 1;
         }
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(Player player)
         {
             player.DrawCard(2);
         }

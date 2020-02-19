@@ -1,5 +1,4 @@
 ﻿using YuGiOh2.Base;
-using YuGiOh2.Data;
 
 namespace YuGiOh2.Cards
 {
@@ -10,7 +9,7 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)AffectMomentType.WhenAttacked;
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(string targetID, Player player)
         {
             for (int i = 0; i < 5; i++)
             {
@@ -19,7 +18,7 @@ namespace YuGiOh2.Cards
                     player.Field.MonsterFields[i].Level > 3)
                     continue;
 
-                Destroy(enemy);
+                Destroy(player.Enemy);
                 return;
             }
             Destroy(player);
@@ -31,14 +30,12 @@ namespace YuGiOh2.Cards
             {
                 if (player.Field.MonsterFields[i] != null)
                 {
-                    DuelUtils.ResetCard(ref player.Field.MonsterFields[i]);
-                    player.Grave.Add(player.Field.MonsterFields[i]);
+                    player.AddCardToGrave(ref player.Field.MonsterFields[i]);
                     player.Field.MonsterFields[i] = null;
                 }
                 if (player.Field.SpellAndTrapFields[i] != null)
                 {
-                    DuelUtils.ResetCard(ref player.Field.SpellAndTrapFields[i]);
-                    player.Grave.Add(player.Field.SpellAndTrapFields[i]);
+                    player.AddCardToGrave(ref player.Field.SpellAndTrapFields[i]);
                     player.Field.SpellAndTrapFields[i] = null;
                 }
             }
@@ -50,7 +47,6 @@ namespace YuGiOh2.Cards
                 }
                 else
                 {
-                    DuelUtils.ResetCard(ref player.Field.FieldField);
                     player.Grave.Add(player.Field.FieldField);
                     player.Field.FieldField = null;
                 }

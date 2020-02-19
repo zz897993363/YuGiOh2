@@ -135,11 +135,11 @@ code {
 }
 
 .right {
-    flex: 0 1 10%;
+    flex: 0 1 18%;
     margin-left: 5%;
-    margin-right: 10%;
+    margin-right: 5%;
     height: 100%;
-    transform: translate(0, 150px);
+    transform: translate(0, 250px);
 }
 
 body {

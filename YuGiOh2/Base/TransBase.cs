@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace YuGiOh2.Base
 {
@@ -23,6 +20,7 @@ namespace YuGiOh2.Base
         public List<Card> PlayerGrave { get; set; }
         public List<Card> EnemyGrave { get; set; }
         public int ChooseTargetType { get; set; }
+        public string Message { get; set; }
     }
 
     public class MessageFactory
@@ -53,6 +51,7 @@ namespace YuGiOh2.Base
                 message.Enable = player.YourTurn;
                 message.FirstTurn = player.FirstTurn;
                 message.ChooseTargetType = player.ChooseTarget;
+                message.Message = player.Message;
             }
             if (enemy != null)
             {

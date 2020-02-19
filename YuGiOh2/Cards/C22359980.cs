@@ -10,9 +10,9 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)AffectMomentType.WhenAttacked;
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(string targetID, Player player)
         {
-            enemy.Field.MonsterFields
+            player.Enemy.Field.MonsterFields
                 .Where(c => c != null && !c.Status.FaceDown)
                 .ToList()
                 .ForEach(c => c.ATK >>= 1);

@@ -98,6 +98,8 @@ namespace YuGiOh2.Hubs
             var msg2 = MessageFactory.GetGameMessage(player2, player1, uid);
             string msgStr1 = JsonConvert.SerializeObject(msg1);
             string msgStr2 = JsonConvert.SerializeObject(msg2);
+            player1.Message = "";
+            player2.Message = "";
             await Clients.Clients(player1.ID).SendAsync("renderGame", msgStr1);
             await Clients.Clients(player2.ID).SendAsync("renderGame", msgStr2);
         }

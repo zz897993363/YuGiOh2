@@ -11,13 +11,13 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)ChooseTargetType.AllMonsterInGrave;
 
-        public static bool CheckIfAvailable(Card card, Player player, Player enemy)
+        public static bool CheckIfAvailable(Player player)
         {
-            return (enemy.Grave.Any(c => c.CardCategory == 0) || player.Grave.Any(c => c.CardCategory == 0)) &&
+            return (player.Enemy.Grave.Any(c => c.CardCategory == 0) || player.Grave.Any(c => c.CardCategory == 0)) &&
                 player.Field.MonsterFields.Any(c => c == null);
         }
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(string targetID, Player player)
         {
             if (targetID == null)
                 return;
@@ -28,17 +28,20 @@ namespace YuGiOh2.Cards
                 if (player.Field.MonsterFields[num] != null)
                     continue;
 
-                MonsterCard monster = (player.Grave.FirstOrDefault(c => c.UID == targetID) ?? 
-                    enemy.Grave.FirstOrDefault(c => c.UID == targetID)) as MonsterCard;
-                if (monster == null)
+                if (!((player.Grave.FirstOrDefault(c => c.UID == targetID) ??
+                    player.Enemy.Grave.FirstOrDefault(c => c.UID == targetID)) is MonsterCard monster))
                     return;
 
                 player.Grave.Remove(monster);
-                enemy.Grave.Remove(monster);
+                player.Enemy.Grave.Remove(monster);
                 player.Hands.Add(monster);
+                bool tmp = player.CanSummon;
                 player.CanSummon = true;
                 player.SummonMonsterFromHands(monster.UID);
+                player.ProcessContinuousEffectWhenSummon(monster.UID);
+                player.Enemy.ProcessContinuousEffectWhenSummon(monster.UID);
                 monster.Status.CanChangePosition = true;
+                player.CanSummon = tmp;
             }
         }
     }

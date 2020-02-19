@@ -1,6 +1,6 @@
 ﻿import React, { Component } from "react";
 import * as signalR from '@microsoft/signalr';
-import { Button, Modal, Card, Carousel, Icon } from 'antd';
+import { Button, Modal, Card, Carousel, Icon, Result } from 'antd';
 import 'antd/es/button/style/css';
 import 'antd/es/modal/style/css';
 import 'antd/es/card/style/css';
@@ -22,7 +22,8 @@ export class Duel extends Component {
             detail: false,
             showGrave: false,
             list: null, //在弹出式对话框中显示的卡片列表
-            focusedCard: null
+            focusedCard: null,
+            result: null
         }
         this.standBy = this.standBy.bind(this);
         this.summonFromHands = this.summonFromHands.bind(this);
@@ -89,23 +90,22 @@ export class Duel extends Component {
     renderGame(game) {
         let data = JSON.parse(game);
         let log = this.state.log;
-        log += "渲染棋盘\r\n";
+        log += data.Message;
         this.setState({ log: log });
-        console.log(data);
         this.setState({ data: data });
-        log += "渲染完毕\r\n";
         if (data.Winner !== null) {
+            let result;
             if (data.Winner === "Draw") {
-                log += "游戏结束，平局\r\n";
+                result = "平局";
             }
             if (data.Winner === "Enemy") {
-                log += "游戏结束，你输了\r\n";
+                result = "你输了";
             }
             if (data.Winner === "Player") {
-                log += "游戏结束，你赢了\r\n";
+                result = "你赢了";
             }
+            this.setState({ result: result });
         }
-        this.setState({ log: log });
     }
 
     standBy() {
@@ -1002,12 +1002,29 @@ export class Duel extends Component {
                     >
                         {carousel(selectList())}
                     </Modal>
-
+                    <Modal
+                        visible={this.state.result}
+                        closable={false}
+                        footer={null}
+                    >
+                        <Result
+                            icon={this.state.result === "你赢了" ?
+                                <Icon type="smile" theme="twoTone" /> :
+                                <Icon type="frown" theme="twoTone" />
+                            }
+                            title={this.state.result}
+                            extra={[<Button type="primary" key="save">保存战报</Button>,
+                            <Button key="back">返回</Button>]}
+                        />
+                    </Modal>
                     <div className="right">
 
                         {this.state.data.UID ?
                             (<div>
-                                <textarea id="msg" value={this.state.log} readOnly={true} style={{ height: "700px", width: 100 + "%", resize: "none" }}>
+                                <textarea id="msg" value={this.state.log} readOnly={true}
+                                    style={{
+                                        height: "500px", width: 100 + "%", resize: "none", backgroundColor: "transparent", color: "white"
+                                    }}>
                                 </textarea>
                                 {this.blank(3)}
                                 <Button type="danger" style={{ marginTop: "5%" }}

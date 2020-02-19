@@ -10,22 +10,22 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)ChooseTargetType.AllFaceUpMonster;
 
-        public static bool CheckIfAvailable(Card card, Player player, Player enemy)
+        public static bool CheckIfAvailable(Player player)
         {
             return player.Field.MonsterFields.Any(c => c != null && !c.Status.FaceDown) ||
-                enemy.Field.MonsterFields.Any(c => c != null && !c.Status.FaceDown);
+                player.Enemy.Field.MonsterFields.Any(c => c != null && !c.Status.FaceDown);
         }
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(string targetID, Player player)
         {
             if (targetID == null)
                 return;
 
             MonsterCard target = player.Field.MonsterFields.FirstOrDefault(c => c != null && c.UID == targetID) ??
-                enemy.Field.MonsterFields.FirstOrDefault(c => c != null && c.UID == targetID);
-            if (target == null || player.HP == enemy.HP)
+                player.Enemy.Field.MonsterFields.FirstOrDefault(c => c != null && c.UID == targetID);
+            if (target == null || player.HP == player.Enemy.HP)
                 return;
-            target.ATK = player.HP > enemy.HP ? target.ATK >> 1 : target.ATK << 1;
+            target.ATK = player.HP > player.Enemy.HP ? target.ATK >> 1 : target.ATK << 1;
         }
     }
 }

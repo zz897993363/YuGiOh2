@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace YuGiOh2.Base
+﻿namespace YuGiOh2.Base
 {
     public enum Attribute
     {

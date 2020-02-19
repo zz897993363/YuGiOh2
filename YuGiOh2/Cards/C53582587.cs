@@ -1,5 +1,4 @@
 ﻿using YuGiOh2.Base;
-using YuGiOh2.Data;
 
 namespace YuGiOh2.Cards
 {
@@ -10,10 +9,10 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)AffectMomentType.WhenSummoned;
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(string targetID, Player player)
         {
             Destroy(player);
-            Destroy(enemy);
+            Destroy(player.Enemy);
         }
 
         private static void Destroy(Player player)
@@ -23,8 +22,7 @@ namespace YuGiOh2.Cards
                 if (player.Field.MonsterFields[i] == null)
                     continue;
 
-                DuelUtils.ResetCard(ref player.Field.MonsterFields[i]);
-                player.Grave.Add(player.Field.MonsterFields[i]);
+                player.AddCardToGrave(ref player.Field.MonsterFields[i]);
                 player.Field.MonsterFields[i] = null;
             }
         }

@@ -10,12 +10,12 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)AffectMomentType.WhenAttacked;
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(string targetID, Player player)
         {
             if (targetID == null)
                 return;
 
-            var monster = enemy.Field.MonsterFields.FirstOrDefault(c => c != null && c.UID == targetID);
+            var monster = player.Enemy.Field.MonsterFields.FirstOrDefault(c => c != null && c.UID == targetID);
             if (monster == null)
                 return;
 

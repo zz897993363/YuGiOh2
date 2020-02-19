@@ -10,16 +10,16 @@ namespace YuGiOh2.Cards
     {
         public static int Type { get; } = (int)ChooseTargetType.None;
 
-        public static bool CheckIfAvailable(Card card, Player player, Player enemy)
+        public static bool CheckIfAvailable(Player player)
         {
             return player.Field.MonsterFields.Any(c => c != null && !c.Status.FaceDown) ||
-                enemy.Field.MonsterFields.Any(c => c != null && !c.Status.FaceDown);
+                player.Enemy.Field.MonsterFields.Any(c => c != null && !c.Status.FaceDown);
         }
 
-        public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)
+        public static void ProcessEffect(Player player)
         {
             Change(player);
-            Change(enemy);
+            Change(player.Enemy);
         }
 
         private static void Change(Player player)
