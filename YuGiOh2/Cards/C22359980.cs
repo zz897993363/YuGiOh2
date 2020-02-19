@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using YuGiOh2.Base;
-using YuGiOh2.Data;
 
 namespace YuGiOh2.Cards
 {
@@ -16,7 +15,7 @@ namespace YuGiOh2.Cards
             enemy.Field.MonsterFields
                 .Where(c => c != null && !c.Status.FaceDown)
                 .ToList()
-                .ForEach(c => c.ATK <<= 1);
+                .ForEach(c => c.ATK >>= 1);
         }
     }
 }

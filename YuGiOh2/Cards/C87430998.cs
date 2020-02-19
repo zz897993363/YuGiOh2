@@ -57,6 +57,12 @@ namespace YuGiOh2.Cards
                 target.MonsterType == (int)MonsterType.BeastWarrior)))
                 return;
             target.ATK += (target.ATK >> 1);
+            target.DEF += (target.DEF >> 1);
+        }
+
+        public static void ProcessWhenSetMonster(Card card, string targetID, Player player, Player enemy)
+        {
+            ProcessWhenSummon(card, targetID, player, enemy);
         }
 
         public static void ProcessWhenLeave(Card card, string targetID, Player player, Player enemy)

@@ -24,7 +24,7 @@ namespace YuGiOh2.Cards
                 {
                     if (player.Field.MonsterFields.All(c => c != null))
                     {
-                        DuelUtils.ResetCard(enemy.Field.MonsterFields[i]);
+                        DuelUtils.ResetCard(ref enemy.Field.MonsterFields[i]);
                         enemy.Grave.Add(enemy.Field.MonsterFields[i]);
                         enemy.Field.MonsterFields[i] = null;
                         return;

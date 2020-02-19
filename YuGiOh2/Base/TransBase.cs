@@ -86,17 +86,26 @@ namespace YuGiOh2.Base
         private static Field ProcessEnemyField(in Field field)
         {
             Field copy = new Field();
-            for (int i = 0; i < field.MonsterFields.Length; i++)
+            for (int i = 0; i < 5; i++)
             {
-                MonsterCard cur = field.MonsterFields[i];
-                copy.MonsterFields[i] = cur != null && cur.Status.FaceDown ? faceDownM : cur;
+                MonsterCard m = field.MonsterFields[i];
+                if (m != null)
+                {
+                    copy.MonsterFields[i] = m.Status.FaceDown ? faceDownM : m;
+                    copy.MonsterFields[i].UID = m.UID;
+                }
+                SpellAndTrapCard s = field.SpellAndTrapFields[i];
+                if (s != null)
+                {
+                    copy.SpellAndTrapFields[i] = s.Status.FaceDown ? faceDownSAT : s;
+                    copy.SpellAndTrapFields[i].UID = s.UID;
+                }
             }
-            for (int i = 0; i < field.SpellAndTrapFields.Length; i++)
+            if (field.FieldField != null)
             {
-                SpellAndTrapCard cur = field.SpellAndTrapFields[i];
-                copy.SpellAndTrapFields[i] = cur != null && cur.Status.FaceDown ? faceDownSAT : cur;
+                copy.FieldField = field.FieldField.Status.FaceDown ? faceDownSAT : field.FieldField;
+                copy.FieldField.UID = field.FieldField.UID;
             }
-            copy.FieldField = field.FieldField != null && field.FieldField.Status.FaceDown ? faceDownSAT : field.FieldField;
             return copy;
         }
     }

@@ -34,17 +34,37 @@ namespace YuGiOh2.Data
             return DBContext.SaveChanges();
         }
 
-        public static void ResetCard(Card card)
+        public static void ResetCard(ref Card card)
         {
-            var card_m = _cards.FirstOrDefault(c => c.Password == card.Password);
-            if (card.CardCategory == 0)
+
+            if (card is MonsterCard)
             {
-                card = new MonsterCard(card_m);
+                MonsterCard c = card as MonsterCard;
+                ResetCard(ref c);
             }
-            else
+            else if (card is SpellAndTrapCard)
             {
-                card = new SpellAndTrapCard(card_m);
+                SpellAndTrapCard c = card as SpellAndTrapCard;
+                ResetCard(ref c);
             }
+        }
+
+        public static void ResetCard(ref MonsterCard card)
+        {
+            string pwd = card.Password;
+            string uid = card.UID;
+            var card_m = _cards.FirstOrDefault(c => c.Password == pwd);
+            card = new MonsterCard(card_m);
+            card.UID = uid;
+        }
+
+        public static void ResetCard(ref SpellAndTrapCard card)
+        {
+            string pwd = card.Password;
+            string uid = card.UID;
+            var card_m = _cards.FirstOrDefault(c => c.Password == pwd);
+            card = new SpellAndTrapCard(card_m);
+            card.UID = uid;
         }
 
         public static List<Models.Card> GetAllCards()

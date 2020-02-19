@@ -19,7 +19,7 @@ namespace YuGiOh2.Cards
                     enemy.Field.MonsterFields[i].Level > 4)
                     continue;
 
-                DuelUtils.ResetCard(enemy.Field.MonsterFields[i]);
+                DuelUtils.ResetCard(ref enemy.Field.MonsterFields[i]);
                 enemy.Grave.Add(enemy.Field.MonsterFields[i]);
                 enemy.Field.MonsterFields[i] = null;
             }

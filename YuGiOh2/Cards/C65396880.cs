@@ -31,13 +31,13 @@ namespace YuGiOh2.Cards
             {
                 if (player.Field.MonsterFields[i] != null)
                 {
-                    DuelUtils.ResetCard(player.Field.MonsterFields[i]);
+                    DuelUtils.ResetCard(ref player.Field.MonsterFields[i]);
                     player.Grave.Add(player.Field.MonsterFields[i]);
                     player.Field.MonsterFields[i] = null;
                 }
                 if (player.Field.SpellAndTrapFields[i] != null)
                 {
-                    DuelUtils.ResetCard(player.Field.SpellAndTrapFields[i]);
+                    DuelUtils.ResetCard(ref player.Field.SpellAndTrapFields[i]);
                     player.Grave.Add(player.Field.SpellAndTrapFields[i]);
                     player.Field.SpellAndTrapFields[i] = null;
                 }
@@ -50,7 +50,7 @@ namespace YuGiOh2.Cards
                 }
                 else
                 {
-                    DuelUtils.ResetCard(player.Field.FieldField);
+                    DuelUtils.ResetCard(ref player.Field.FieldField);
                     player.Grave.Add(player.Field.FieldField);
                     player.Field.FieldField = null;
                 }

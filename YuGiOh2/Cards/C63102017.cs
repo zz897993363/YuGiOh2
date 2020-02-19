@@ -12,7 +12,7 @@ namespace YuGiOh2.Cards
 
         public static bool CheckIfAvailable(Card card, Player player, Player enemy)
         {
-            return enemy.Field.MonsterFields.Any(c => c != null && !c.Status.FaceDown);
+            return enemy.Field.MonsterFields.Any(c => c != null);
         }
 
         public static void ProcessEffect(Card card, string targetID, Player player, Player enemy)

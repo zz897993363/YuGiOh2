@@ -206,10 +206,7 @@ namespace YuGiOh2.Hubs
                 Thread.Sleep(500);
                 Player2.ProcessEffect(card.UID);
             }
-            else
-            {
-                Player1.DirectAttack(index);
-            }
+            Player1.DirectAttack(index);
 
             await SendMessage(Player1, Player2, uid);
         }
@@ -241,10 +238,7 @@ namespace YuGiOh2.Hubs
                     Thread.Sleep(500);
                     Player2.ProcessEffect(card1.UID);
                 }
-                else
-                {
-                    Player1.Battle(index1, index2);
-                }
+                Player1.Battle(index1, index2);
             }
             catch (Exception ex)
             {

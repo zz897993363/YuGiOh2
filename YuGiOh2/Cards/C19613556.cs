@@ -30,7 +30,7 @@ namespace YuGiOh2.Cards
                 if (player.Field.SpellAndTrapFields[i] == null)
                     continue;
 
-                DuelUtils.ResetCard(player.Field.SpellAndTrapFields[i]);
+                DuelUtils.ResetCard(ref player.Field.SpellAndTrapFields[i]);
                 player.Grave.Add(player.Field.SpellAndTrapFields[i]);
                 player.Field.SpellAndTrapFields[i] = null;
             }
@@ -42,11 +42,13 @@ namespace YuGiOh2.Cards
                 }
                 else
                 {
-                    DuelUtils.ResetCard(player.Field.FieldField);
+                    DuelUtils.ResetCard(ref player.Field.FieldField);
                     player.Grave.Add(player.Field.FieldField);
                     player.Field.FieldField = null;
                 }
             }
+            player.TrapsWhenAttack.Clear();
+            player.TrapsWhenSummon.Clear();
         }
     }
 }

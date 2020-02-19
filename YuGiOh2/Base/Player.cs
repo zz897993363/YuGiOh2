@@ -36,6 +36,10 @@ namespace YuGiOh2.Base
         /// </summary>
         public Dictionary<string, (MethodInfo methodInfo, string targetID)> EffectWhenSummon { get; set; }
         /// <summary>
+        /// 处理盖怪时结算的永续效果
+        /// </summary>
+        public Dictionary<string, (MethodInfo methodInfo, string targetID)> EffectWhenSetMonster { get; set; }
+        /// <summary>
         /// 处理攻击时结算的永续效果
         /// </summary>
         public Dictionary<string, (MethodInfo methodInfo, string targetID)> EffectWhenAttack { get; set; }
@@ -63,6 +67,7 @@ namespace YuGiOh2.Base
             EffectTillEndPhase = new Queue<(MethodInfo methodInfo, string targetID)>();
             EffectWhenAttack = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
             EffectWhenSummon = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
+            EffectWhenSetMonster = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
             EffectWhenSelfLeave = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
             TrapsWhenSummon = new Queue<SpellAndTrapCard>();
             TrapsWhenAttack = new Queue<SpellAndTrapCard>();
@@ -126,6 +131,7 @@ namespace YuGiOh2.Base
             {
                 Card card = Hands[Hands.Count - 1];
                 Hands.Remove(card);
+                DuelUtils.ResetCard(ref card);
                 Grave.Add(card);
             }
         }
@@ -226,6 +232,7 @@ namespace YuGiOh2.Base
             {
                 if (Field.FieldField.Status.FaceDown)
                 {
+                    DuelUtils.ResetCard(ref Field.FieldField);
                     Grave.Add(Field.FieldField);
                 }
                 else
@@ -244,6 +251,7 @@ namespace YuGiOh2.Base
             {
                 if (Field.FieldField.Status.FaceDown)
                 {
+                    DuelUtils.ResetCard(ref Field.FieldField);
                     Grave.Add(Field.FieldField);
                 }
                 else
@@ -263,11 +271,14 @@ namespace YuGiOh2.Base
                 return;
 
             var tmp = Enemy.Field.FieldField;
-            DuelUtils.ResetCard(tmp);
+            DuelUtils.ResetCard(ref tmp);
             Enemy.Grave.Add(tmp);
             Enemy.Field.FieldField = null;
             Enemy.ProcessEffectWhenLeave(tmp.UID);
             Enemy.EffectWhenSummon.Remove(tmp.UID);
+            Enemy.EffectWhenSetMonster.Remove(tmp.UID);
+            Enemy.EffectWhenAttack.Remove(tmp.UID);
+            Enemy.EffectWhenSelfLeave.Remove(tmp.UID);
         }
 
         public void ProcessEffect(string targetID)
@@ -280,6 +291,8 @@ namespace YuGiOh2.Base
             {
                 methodInfo = type.GetMethod("ProcessWhenSummon");
                 EffectWhenSummon.Add(EffectingCard.UID, (methodInfo, null));
+                methodInfo = type.GetMethod("ProcessWhenSetMonster");
+                EffectWhenSetMonster.Add(EffectingCard.UID, (methodInfo, null));
                 methodInfo = type.GetMethod("ProcessWhenLeave");
                 EffectWhenSelfLeave.Add(EffectingCard.UID, (methodInfo, null));
                 EffectingCard = null;
@@ -298,6 +311,7 @@ namespace YuGiOh2.Base
 
                 if (Field.SpellAndTrapFields[i].UID == EffectingCard.UID)
                 {
+                    DuelUtils.ResetCard(ref Field.SpellAndTrapFields[i]);
                     Grave.Add(Field.SpellAndTrapFields[i]);
                     Field.SpellAndTrapFields[i] = null;
                 }
@@ -479,7 +493,7 @@ namespace YuGiOh2.Base
                 {
                     Enemy.DecreaseHP(attackerPoint - targetPoint);
                 }
-                DuelUtils.ResetCard(target);
+                DuelUtils.ResetCard(ref target);
                 Enemy.Grave.Add(target);
                 Enemy.Field.MonsterFields[targetIndex] = null;
                 attacker.Status.AttackChances--;
@@ -489,7 +503,7 @@ namespace YuGiOh2.Base
             {
                 if (!target.Status.DefensePosition)
                 {
-                    DuelUtils.ResetCard(attacker);
+                    DuelUtils.ResetCard(ref attacker);
                     Grave.Add(attacker);
                     Field.MonsterFields[attackerIndex] = null;
                 }
@@ -505,10 +519,10 @@ namespace YuGiOh2.Base
             {
                 if (!target.Status.DefensePosition)
                 {
-                    DuelUtils.ResetCard(attacker);
+                    DuelUtils.ResetCard(ref attacker);
                     Grave.Add(attacker);
                     Field.MonsterFields[attackerIndex] = null;
-                    DuelUtils.ResetCard(target);
+                    DuelUtils.ResetCard(ref target);
                     Enemy.Grave.Add(target);
                     Enemy.Field.MonsterFields[targetIndex] = null;
                 }

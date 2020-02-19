@@ -8,7 +8,7 @@ namespace YuGiOh2.Cards
     /// </summary>
     public class C25880422
     {
-        public static int Type { get; } = (int)ChooseTargetType.FoeMonster;
+        public static int Type { get; } = (int)ChooseTargetType.FoeFaceUpMonster;
 
         public static bool CheckIfAvailable(Card card, Player player, Player enemy)
         {

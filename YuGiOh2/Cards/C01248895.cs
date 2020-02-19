@@ -20,7 +20,7 @@ namespace YuGiOh2.Cards
                     enemy.Field.MonsterFields[i].ATK > 2000)
                     continue;
 
-                DuelUtils.ResetCard(enemy.Field.MonsterFields[i]);
+                DuelUtils.ResetCard(ref enemy.Field.MonsterFields[i]);
                 var result = enemy.Deck.Where(c => c.Password == enemy.Field.MonsterFields[i].Password);
                 foreach (var item in result)
                 {
