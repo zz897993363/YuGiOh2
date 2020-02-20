@@ -28,39 +28,8 @@ namespace YuGiOh2.Base
             Player2 = new Player(null, id2);
             Player1.Enemy = Player2;
             Player2.Enemy = Player1;
-            BuildDeck(Player1);
-            BuildDeck(Player2);
-        }
-
-        private static void BuildDeck(Player player)
-        {
-            var cardBase = DuelUtils.GetAllCards();
-            var monsters = cardBase.Where(c => c.Category == (int)CardCategory.Monster).ToList();
-            var spellAndTraps = cardBase.Where(c => c.Category != (int)CardCategory.Monster).ToList();
-            int[] check = new int[monsters.Count + spellAndTraps.Count];
-            Random rd = new Random();
-            player.Deck.Add(new SpellAndTrapCard(spellAndTraps.FirstOrDefault(c => c.Password == "01248895")));
-            
-            for (int i = 0; i < 20; i++)
-            {
-                int idx = rd.Next(0, monsters.Count);
-                while (check[idx] >= 3)
-                {
-                    idx = rd.Next(0, monsters.Count);
-                }
-                player.Deck.Insert(rd.Next(player.Deck.Count), new MonsterCard(monsters[idx]));
-                check[idx]++;
-            }
-            for (int i = 0; i < 10; i++)
-            {
-                int idx = rd.Next(0, spellAndTraps.Count);
-                while (check[idx] >= 3)
-                {
-                    idx = rd.Next(0, spellAndTraps.Count);
-                }
-                player.Deck.Insert(rd.Next(player.Deck.Count), new SpellAndTrapCard(spellAndTraps[idx]));
-                check[idx]++;
-            }
+            Player1.Deck = DuelUtils.GetRandomDeck();
+            Player2.Deck = DuelUtils.GetRandomDeck();
         }
     }
 

@@ -14,6 +14,8 @@ namespace YuGiOh2.Data
 
         private static List<Models.Card> _cards;
 
+        private static List<Models.Deck> _decks;
+
         public static Models.Card GetCard(string password)
         {
             return DBContext.Card.FirstOrDefault(c => c.Password == password);
@@ -67,6 +69,77 @@ namespace YuGiOh2.Data
             card.UID = uid;
         }
 
+        internal static List<Card> GetRandomDeck()
+        {
+            var cardBase = GetAllCards();
+            var monsters = cardBase.Where(c => c.Category == (int)CardCategory.Monster).ToList();
+            var spellAndTraps = cardBase.Where(c => c.Category != (int)CardCategory.Monster).ToList();
+            int[] check = new int[monsters.Count + spellAndTraps.Count];
+            List<Card> deck = new List<Card>();
+            Random rd = new Random();
+            for (int i = 0; i < 15; i++)
+            {
+                int idx = rd.Next(0, monsters.Count);
+                while (check[idx] >= 3)
+                {
+                    idx = rd.Next(0, monsters.Count);
+                }
+                deck.Insert(rd.Next(deck.Count), new MonsterCard(monsters[idx]));
+                check[idx]++;
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                int idx = rd.Next(0, spellAndTraps.Count);
+                while (check[idx] >= 3)
+                {
+                    idx = rd.Next(0, spellAndTraps.Count);
+                }
+                deck.Insert(rd.Next(deck.Count), new SpellAndTrapCard(spellAndTraps[idx]));
+                check[idx]++;
+            }
+            List<Card> deck2 = new List<Card>();
+            while (deck.Count > 0)
+            {
+                int idx = rd.Next(0, deck.Count);
+                Card card = deck[idx];
+                deck.Remove(card);
+                deck2.Add(card);
+            }
+            return deck2;
+        }
+
+        internal static List<Card> GetDeck(int index)
+        {
+            var deck_m = _decks.FirstOrDefault(d => d.Id == index);
+            if (deck_m == null)
+                return null;
+
+            string[] pwds = deck_m.Composition.Split(',');
+            List<Card> deck = new List<Card>();
+            Random rd = new Random();
+            foreach (var pwd in pwds)
+            {
+                var card_m = _cards.FirstOrDefault(c => c.Password == pwd);
+                if (card_m.Category == 0)
+                {
+                    deck.Insert(rd.Next(deck.Count), new MonsterCard(card_m));
+                }
+                else
+                {
+                    deck.Insert(rd.Next(deck.Count), new SpellAndTrapCard(card_m));
+                }
+            }
+            List<Card> deck2 = new List<Card>();
+            while (deck.Count > 0)
+            {
+                int idx = rd.Next(0, deck.Count);
+                Card card = deck[idx];
+                deck.Remove(card);
+                deck2.Add(card);
+            }
+            return deck2;
+        }
+
         public static List<Models.Card> GetAllCards()
         {
             if (_cards == null)
@@ -74,13 +147,11 @@ namespace YuGiOh2.Data
             return _cards;
         }
 
-        internal static void ProcessEffect(string cardID, Player player1, Player player2)
+        public static List<Models.Deck> GetAllDecks()
         {
-            Card card = player1.Field.SpellAndTrapFields.FirstOrDefault(c => c.UID == cardID);
-            string className = "C" + card.Password;
-            Type type = Type.GetType(className);
-            MethodInfo methodInfo = type.GetMethod("ProcessEffect");
-            methodInfo.Invoke(null, new object[] { card, player1, player2 });
+            if (_decks == null)
+                _decks = DBContext.Deck.ToList();
+            return _decks;
         }
     }
 
@@ -94,5 +165,7 @@ namespace YuGiOh2.Data
         public DbSet<Models.Card> Card { get; set; }
 
         public DbSet<Models.Fusion> Fusion { get; set; }
+
+        public DbSet<Models.Deck> Deck { get; set; }
     }
 }

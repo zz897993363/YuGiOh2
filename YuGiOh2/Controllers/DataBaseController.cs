@@ -20,36 +20,12 @@ namespace YuGiOh2.Controllers
             DBContext = context;
         }
 
-        // GET: api/<controller>
-        //[HttpGet]
-        //public int Get()
-        //{
-        //    Models.Card card = new Models.Card();
-        //    card.ATK = 3000;
-        //    card.Attribute = (int)Base.Attribute.Light;
-        //    card.CardType = (int)CardType.Normal;
-        //    card.DEF = 2500;
-        //    card.Level = 8;
-        //    card.MonsterType = (int)MonsterType.Dragon;
-        //    card.Name = "Blue-Eyes White Dragon";
-        //    card.Password = "89631139";
-        //    card.SummonedAttribute = (int)SummonedAttribute.Divine;
-        //    card.Text = "This legendary dragon is a powerful engine of destruction. Virtually invincible, very few have faced this awesome creature and lived to tell the tale.";
-        //    DBContext.Card.Add(card);
-        //    return DBContext.SaveChanges();
-
-
-
-        //}
-
-        // GET api/<controller>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpGet("getdecks")]
+        public IActionResult GetDecks()
         {
-            return "value";
+            return new JsonResult(DuelUtils.GetAllDecks());
         }
 
-        // POST api/<controller>
         [HttpPost("addcard")]
         public IActionResult AddCard([FromBody]Models.Card value)
         {

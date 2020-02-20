@@ -1,7 +1,9 @@
 ﻿import React, { Component } from "react";
 import * as signalR from '@microsoft/signalr';
-import { Button, Modal, Card, Carousel, Icon, Result, Descriptions } from 'antd';
+import { Radio, Button, Modal, Card, Carousel, Icon, Result, Descriptions, Popover } from 'antd';
 import FileSaver from 'file-saver';
+import axios from 'axios';
+import 'antd/es/radio/style/css';
 import 'antd/es/button/style/css';
 import 'antd/es/modal/style/css';
 import 'antd/es/card/style/css';
@@ -9,12 +11,15 @@ import 'antd/es/carousel/style/css';
 import 'antd/es/icon/style/css';
 import 'antd/es/result/style/css';
 import 'antd/es/descriptions/style/css';
+import 'antd/es/popover/style/css';
 import '../custom.css';
-import { Redirect } from "react-router-dom";
 
 export class Duel extends Component {
     constructor(props) {
         super(props);
+
+        this.params = this.props.location.state;
+
         this.state = {
             connected: false,
             ready: false,
@@ -27,7 +32,9 @@ export class Duel extends Component {
             showGrave: false,
             list: null, //在弹出式对话框中显示的卡片列表
             focusedCard: null,
-            result: null
+            result: null,
+            deckIndex: 0,
+            deck: null
         }
         this.standBy = this.standBy.bind(this);
         this.summonFromHands = this.summonFromHands.bind(this);
@@ -60,6 +67,10 @@ export class Duel extends Component {
     }
 
     componentDidMount() {
+        if (this.params) {
+            document.title = this.params.title;
+        }
+
         this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
 
         this.connection.on("logErr", err => { console.log(err) });
@@ -78,6 +89,12 @@ export class Duel extends Component {
                 })
             .catch(err => console.log(err));
 
+        axios.get("/database/getdecks")
+            .then(e => {
+                this.setState({ deck: e.data });
+            }).catch(err => {
+                console.log("获取卡组失败！", err);
+            });
     }
 
     duelInit(game) {
@@ -123,7 +140,7 @@ export class Duel extends Component {
     }
 
     standBy() {
-        this.connection.invoke("StandBy");
+        this.connection.invoke("StandBy", this.state.deckIndex);
         this.setState({ ready: true });
     }
 
@@ -241,7 +258,10 @@ export class Duel extends Component {
         }
     }
 
-    effectTarget(targetId) {
+    effectTarget(targetId, field) {
+        console.log("targetID:", targetId);
+        console.log(field);
+        console.log(this.state.data);
         this.connection.invoke("ProcessEffect", this.state.data.UID, targetId);
         this.setState({ processing: false });
     }
@@ -296,6 +316,12 @@ export class Duel extends Component {
     prev() {
         this.slider.slick.slickPrev();
     }
+
+    changeDeck = evt => {
+        this.setState({
+            deckIndex: evt.target.value
+        });
+    };
 
     render() {
         let playerMonsters = () => {
@@ -355,7 +381,7 @@ export class Duel extends Component {
                                         (data.ChooseTargetType === 2 || data.ChooseTargetType === 14) && field.MonsterFields[i].Status.FaceDown ||
                                         data.ChooseTargetType === 15 ? "block" : "none"
                                 }}>
-                                    <button onClick={evt => this.effectTarget(field.MonsterFields[i].UID)}>选择</button>
+                                    <button onClick={evt => this.effectTarget(field.MonsterFields[i].UID, field)}>选择</button>
                                 </div>
                             </div>) :
                             ""}
@@ -376,7 +402,7 @@ export class Duel extends Component {
                             <div className="bubble">
                                 <div className="bubble">
                                     {field.SpellAndTrapFields[i].Status.FaceDown &&
-                                        field.SpellAndTrapFields[i].CardCategory == 1 &&
+                                        field.SpellAndTrapFields[i].CardCategory === 1 &&
                                         !this.state.processing ?
                                         <button onClick={evt => this.effectFromField(i)}>发动</button> :
                                         ""}
@@ -576,7 +602,7 @@ export class Duel extends Component {
                                         (data.ChooseTargetType === 8 || data.ChooseTargetType === 14) && field.MonsterFields[4 - i].Status.FaceDown ||
                                         data.ChooseTargetType === 15 ? "block" : "none"
                                 }}>
-                                    <button onClick={evt => this.effectTarget(field.MonsterFields[4 - i].UID)}>选择</button>
+                                    <button onClick={evt => this.effectTarget(field.MonsterFields[4 - i].UID, field)}>选择</button>
                                 </div>
                             </div>) :
                             ""
@@ -795,7 +821,7 @@ export class Duel extends Component {
                             {hands[i] ?
                                 (hands[i].CardCategory === 0 && this.state.data.CanSummon && !this.state.processing ?
                                     <button onClick={evt => this.summonFromHands(i)}>召唤</button> :
-                                    (hands[i].CardCategory === 1 ? <button onClick={evt => this.effectFromHands(i)}>发动</button> : "")) :
+                                    (hands[i].CardCategory === 1 && !this.state.processing ? <button onClick={evt => this.effectFromHands(i)}>发动</button> : "")) :
                                 ""}
                             {hands[i] ?
                                 ((hands[i].CardCategory !== 0 || this.state.data.CanSummon) && !this.state.processing ?
@@ -866,7 +892,7 @@ export class Duel extends Component {
 
         let card = () => {
             let card = this.state.focusedCard;
-            if (card == null)
+            if (card === null)
                 return;
             let content = [];
             if (card.CardCategory === 0) {
@@ -883,7 +909,7 @@ export class Duel extends Component {
             } else {
                 content.push(
                     <div key={7} style={{ textAlign: "center", fontSize: "15px" }}>
-                        {this.icon[card.Icon]}{card.CardCategory == 1 ? "魔法卡" : "陷阱卡"}
+                        {this.icon[card.Icon]}{card.CardCategory === 1 ? "魔法卡" : "陷阱卡"}
                         <div style={style}>{card.CardText}</div>
                     </div>);
             }
@@ -922,7 +948,7 @@ export class Duel extends Component {
         }
 
         let carousel = (list) => {
-            if (list == null)
+            if (list === null)
                 return;
 
             const style = {
@@ -955,7 +981,7 @@ export class Duel extends Component {
                 } else {
                     content.push(
                         <div key={7} style={{ textAlign: "center", fontSize: "15px" }}>
-                            {this.icon[card.Icon]}{card.CardCategory == 1 ? "魔法卡" : "陷阱卡"}
+                            {this.icon[card.Icon]}{card.CardCategory === 1 ? "魔法卡" : "陷阱卡"}
                             <div style={style}>{card.CardText}</div>
                         </div>);
                 }
@@ -980,23 +1006,76 @@ export class Duel extends Component {
                 </div>);
         }
 
+        let selectDeck = () => {
+            if (this.state.deck === null) {
+                return;
+            }
+            let radios = [];
+            radios.push(
+                <div key={0} style={{ height: "159px", float: "left" }}>
+                    <div className="square2" style={{ border: "none" }} >
+                        <Popover placement="topLeft" title={"随机套牌"}
+                            content={"从所有卡池内随机选取15张怪兽卡与10张魔法/陷阱卡组成套牌，可能会产生意想不到的惊喜！"}>
+                            <img src="/pics/back.jpg" height={100 + "%"} />
+                        </Popover>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                        <Radio value={0}></Radio>
+                    </div>
+                </div>);
+            for (let i = 0; i < this.state.deck.length; i++) {
+                radios.push(
+                    <div key={i + 1} style={{ height: "159px", float: "left" }}>
+                        <div className="square2" style={{ border: "none" }} >
+                            <Popover placement="topLeft" title={this.state.deck[i].name}
+                                content={this.state.deck[i].text}>
+                                <img src={`/pics/${this.state.deck[i].coverPassword}.jpg`} width={100 + "%"} />
+                            </Popover>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                            <Radio value={i + 1}></Radio>
+                        </div>
+                    </div >);
+            }
+
+            return (
+                <div className="middle" style={{
+                    display: !this.state.data.UID ? "block" : "none",
+                    width: "100%",
+                    textAlign: "center",
+                    marginTop: "15%"
+                }}>
+                    <div>
+                        <h2 style={{ color: "white" }}>请选择你的套牌</h2>
+                        <Radio.Group onChange={this.changeDeck} value={this.state.deckIndex} disabled={this.state.ready}>
+                            {radios}
+                        </Radio.Group>
+                    </div>
+                </div >);
+        };
+
         return (
             <div>
-                <div className="container">
-                    <div className="left">
-                        <div>
-                            <div style={{ color: "white" }}>当前在线人数：{this.state.onlineNums} 人</div>
-                            {this.state.data !== {} ?
-                                (<Button type="primary" onClick={this.standBy}
-                                    disabled={this.state.ready}>
-                                    {this.state.ready ? "准备中" : "准备"}</Button>
-                                ) : ""}
-                        </div>
+                <div>
+                    <div style={{ color: "white" }}>当前在线人数：{this.state.onlineNums} 人</div>
+                </div>
+                <div style={{ display: this.state.data.UID ? "none" : "block" }}>
+                    {selectDeck()}
+                    <div style={{ marginTop: "5%", marginLeft: "45%", width: "10%", }}>
+                        {this.state.data !== {} ?
+                            (<Button type="primary" onClick={this.standBy}
+                                disabled={this.state.ready} size="large" block>
+                                {this.state.ready ? "准备中" : "准备"}</Button>
+                            ) : ""}
+                    </div>
+                </div>
+                <div className="container" style={{ display: this.state.data.UID ? "" : "none" }}>
+                    <div className="left" style={{ display: "block" }}>
                         <div style={{ transform: "translate(0, 150px)", width: "90%" }}>
                             {card()}
                         </div>
                     </div>
-                    <div className="middle" style={{ display: this.state.data.UID ? "block" : "none" }}>
+                    <div className="middle" style={{ display: "block" }}>
                         {enemyHands()}
                         {this.blank(4)}
                         {field}
@@ -1040,7 +1119,7 @@ export class Duel extends Component {
                             <Button key="back" onClick={() => this.props.history.push('/')}>返回</Button>]}
                         />
                     </Modal>
-                    <div className="right">
+                    <div className="right" style={{ display: "block" }}>
                         {this.state.data.UID ?
                             (<div>
                                 <textarea value={this.state.log} readOnly={true} ref={log => this.textLog = log}

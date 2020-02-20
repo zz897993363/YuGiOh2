@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using YuGiOh2.Base;
 using Newtonsoft.Json;
 using System.Threading;
+using YuGiOh2.Data;
 
 namespace YuGiOh2.Hubs
 {
@@ -23,15 +24,15 @@ namespace YuGiOh2.Hubs
             }
         }
 
-        private static List<string> standByList;
+        private static List<string> standByIDs;
 
-        public static List<string> StandByList
+        public static List<string> StandByIDs
         {
             get
             {
-                if (standByList == null)
-                    standByList = new List<string>();
-                return standByList;
+                if (standByIDs == null)
+                    standByIDs = new List<string>();
+                return standByIDs;
             }
         }
 
@@ -47,6 +48,18 @@ namespace YuGiOh2.Hubs
             }
         }
 
+        private static Dictionary<string, int> decks;
+
+        public static Dictionary<string, int> Decks
+        {
+            get
+            {
+                if (decks == null)
+                    decks = new Dictionary<string, int>();
+                return decks;
+            }
+        }
+
         private static readonly object obj = new object();
 
         public async Task LogError(Exception ex)
@@ -58,6 +71,14 @@ namespace YuGiOh2.Hubs
         public async Task DuelStart(string id1, string id2)
         {
             Game game = new Game(id1, id2);
+            if (Decks.ContainsKey(id1) && Decks[id1] > 0 && Decks[id1] <= DuelUtils.GetAllDecks().Count)
+            {
+                game.Player1.Deck = DuelUtils.GetDeck(Decks[id1]);
+            }
+            if (Decks.ContainsKey(id2) && Decks[id2] > 0 && Decks[id2] <= DuelUtils.GetAllDecks().Count)
+            {
+                game.Player2.Deck = DuelUtils.GetDeck(Decks[id2]);
+            }
             Games.Add(game.UID, game);
             game.Player1.DrawPhase();
             game.Player2.DrawPhase();
@@ -102,6 +123,11 @@ namespace YuGiOh2.Hubs
             player2.Message = "";
             await Clients.Clients(player1.ID).SendAsync("renderGame", msgStr1);
             await Clients.Clients(player2.ID).SendAsync("renderGame", msgStr2);
+            if (player1.Lose || player2.Lose)
+            {
+                Games.Remove(uid);
+                Context.Abort();
+            }
         }
 
         public async Task SummonFromHands(string uid, string cardID)
@@ -141,7 +167,7 @@ namespace YuGiOh2.Hubs
             if (Player1.Hands.Any(c => c.UID == cardID))
                 return;
 
-            if (Player1.ChooseTarget == 0)
+            if (Player1.ChooseTarget <= 0)
             {
                 await SendMessage(Player1, Player2, uid);
                 Thread.Sleep(1000);
@@ -160,7 +186,7 @@ namespace YuGiOh2.Hubs
 
             Player1.EffectFromField(index);
 
-            if (Player1.ChooseTarget == 0)
+            if (Player1.ChooseTarget <= 0)
             {
                 await SendMessage(Player1, Player2, uid);
                 Thread.Sleep(1000);
@@ -285,21 +311,22 @@ namespace YuGiOh2.Hubs
 
         public async Task OnlineNumbers()
         {
-            await Clients.All.SendAsync("onlineNums", ClientIDs.Count);
+            await Clients.All.SendAsync("onlineNums", ClientIDs.Count + StandByIDs.Count + Games.Count * 2);
         }
 
-        public async Task StandBy()
+        public async Task StandBy(int deckIndex)
         {
             string id = Context.ConnectionId;
             if (!ClientIDs.Remove(id))
                 throw new Exception("准备异常！");
-            StandByList.Add(id);
-            if (StandByList.Count > 1)
+            StandByIDs.Add(id);
+            Decks.Add(id, deckIndex);
+            if (StandByIDs.Count > 1)
             {
-                string id1 = StandByList.Last();
-                StandByList.RemoveAt(StandByList.Count - 1);
-                string id2 = StandByList.Last();
-                StandByList.RemoveAt(StandByList.Count - 1);
+                string id1 = StandByIDs.First();
+                StandByIDs.Remove(id1);
+                string id2 = StandByIDs.First();
+                StandByIDs.Remove(id2);
                 try
                 {
                     await DuelStart(id1, id2);
@@ -321,6 +348,8 @@ namespace YuGiOh2.Hubs
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             ClientIDs.Remove(Context.ConnectionId);
+            StandByIDs.Remove(Context.ConnectionId);
+            Decks.Remove(Context.ConnectionId);
             await OnlineNumbers();
         }
     }

@@ -25,16 +25,21 @@ namespace YuGiOh2.Base
 
     public class MessageFactory
     {
-        private static MonsterCard faceDownM;
-        private static SpellAndTrapCard faceDownSAT;
-
-        static MessageFactory()
+        public static MonsterCard FaceDownM(string uid)
         {
-            faceDownM = new MonsterCard();
+            var faceDownM = new MonsterCard();
             faceDownM.Status.FaceDown = true;
             faceDownM.Status.DefensePosition = true;
-            faceDownSAT = new SpellAndTrapCard();
+            faceDownM.UID = uid;
+            return faceDownM;
+        }
+
+        public static SpellAndTrapCard FaceDownSAT(string uid)
+        {
+            var faceDownSAT = new SpellAndTrapCard();
             faceDownSAT.Status.FaceDown = true;
+            faceDownSAT.UID = uid;
+            return faceDownSAT;
         }
 
         public static MessageToClient GetGameMessage(Player player, Player enemy, string uid)
@@ -90,19 +95,19 @@ namespace YuGiOh2.Base
                 MonsterCard m = field.MonsterFields[i];
                 if (m != null)
                 {
-                    copy.MonsterFields[i] = m.Status.FaceDown ? faceDownM : m;
+                    copy.MonsterFields[i] = m.Status.FaceDown ? FaceDownM(m.UID) : m;
                     copy.MonsterFields[i].UID = m.UID;
                 }
                 SpellAndTrapCard s = field.SpellAndTrapFields[i];
                 if (s != null)
                 {
-                    copy.SpellAndTrapFields[i] = s.Status.FaceDown ? faceDownSAT : s;
+                    copy.SpellAndTrapFields[i] = s.Status.FaceDown ? FaceDownSAT(s.UID) : s;
                     copy.SpellAndTrapFields[i].UID = s.UID;
                 }
             }
             if (field.FieldField != null)
             {
-                copy.FieldField = field.FieldField.Status.FaceDown ? faceDownSAT : field.FieldField;
+                copy.FieldField = field.FieldField.Status.FaceDown ? FaceDownSAT(field.FieldField.UID) : field.FieldField;
                 copy.FieldField.UID = field.FieldField.UID;
             }
             return copy;

@@ -267,7 +267,7 @@ namespace YuGiOh2.Base
             }
             else
             {
-                ChooseTarget = 0;
+                ChooseTarget = -1;
                 Message += $"你的【{card.Cname}】发动时机不正确，没有效果！\r\n";
                 Enemy.Message += $"对手的【{card.Cname}】发动时机不正确，没有效果！\r\n";
             }
@@ -352,7 +352,7 @@ namespace YuGiOh2.Base
             {
                 methodInfo.Invoke(null, new object[] { this });
             }
-            else
+            else if (ChooseTarget != -1)
             {
                 methodInfo.Invoke(null, new object[] { targetID, this });
             }

@@ -25,6 +25,18 @@ code {
     width: 96px;
 }
 
+.square2 {
+    background-color: transparent;
+    border: 1px solid #999;
+    float: left;
+    height: 149px;
+    margin-right: 2px;
+    margin-left: 2px;
+    padding: 0;
+    text-align: center;
+    width: 139px;
+}
+
 .msgBox {
     display: block;
     float: right;
