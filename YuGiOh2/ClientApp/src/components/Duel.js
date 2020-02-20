@@ -1,12 +1,16 @@
 ﻿import React, { Component } from "react";
 import * as signalR from '@microsoft/signalr';
-import { Button, Modal, Card, Carousel, Icon, Result } from 'antd';
+import { Button, Modal, Card, Carousel, Icon, Result, Descriptions } from 'antd';
+import FileSaver from 'file-saver';
 import 'antd/es/button/style/css';
 import 'antd/es/modal/style/css';
 import 'antd/es/card/style/css';
 import 'antd/es/carousel/style/css';
 import 'antd/es/icon/style/css';
+import 'antd/es/result/style/css';
+import 'antd/es/descriptions/style/css';
 import '../custom.css';
+import { Redirect } from "react-router-dom";
 
 export class Duel extends Component {
     constructor(props) {
@@ -39,6 +43,7 @@ export class Duel extends Component {
         this.closeGrave = this.closeGrave.bind(this);
         this.next = this.next.bind(this);
         this.prev = this.prev.bind(this);
+        this.saveLog = this.saveLog.bind(this);
 
         this.atext = { 0: "闇", 1: "光", 2: "地", 3: "水", 4: "炎", 5: "風", 6: "神" };
         this.acolor = { 0: "#912d8c", 1: "#fff578", 2: "#4c4e4c", 3: "#70caee", 4: "#ff0000", 5: "#8ac89b", 6: "#fff578" };
@@ -79,9 +84,7 @@ export class Duel extends Component {
         let data = JSON.parse(game);
         let log = this.state.log;
         log += "初始化连接\r\n";
-        this.setState({ log: log });
-        console.log(data);
-        this.setState({ data: data });
+        this.setState({ log: log, data: data });
         this.connection.invoke("InitComplete", data.UID);
         log += "初始化完毕\r\n";
         this.setState({ log: log });
@@ -91,8 +94,8 @@ export class Duel extends Component {
         let data = JSON.parse(game);
         let log = this.state.log;
         log += data.Message;
-        this.setState({ log: log });
-        this.setState({ data: data });
+        this.setState({ log: log, data: data });
+        this.scrollToButtom();
         if (data.Winner !== null) {
             let result;
             if (data.Winner === "Draw") {
@@ -106,6 +109,17 @@ export class Duel extends Component {
             }
             this.setState({ result: result });
         }
+    }
+
+    scrollToButtom() {
+        if (this.textLog) {
+            this.textLog.scrollTop = this.textLog.scrollHeight;
+        }
+    }
+
+    saveLog() {
+        let blob = new Blob([this.state.log], { type: "text/plain;charset=utf-8" });
+        FileSaver.saveAs(blob, "战报" + Date.now());
     }
 
     standBy() {
@@ -278,6 +292,7 @@ export class Duel extends Component {
     next() {
         this.slider.slick.slickNext();
     }
+
     prev() {
         this.slider.slick.slickPrev();
     }
@@ -360,7 +375,9 @@ export class Duel extends Component {
                         {hasCard ? (
                             <div className="bubble">
                                 <div className="bubble">
-                                    {field.SpellAndTrapFields[i].Status.FaceDown && field.SpellAndTrapFields[i].CardCategory == 1 ?
+                                    {field.SpellAndTrapFields[i].Status.FaceDown &&
+                                        field.SpellAndTrapFields[i].CardCategory == 1 &&
+                                        !this.state.processing ?
                                         <button onClick={evt => this.effectFromField(i)}>发动</button> :
                                         ""}
                                     <button onClick={evt => this.showDetail(field.SpellAndTrapFields[i])}>详细</button>
@@ -404,7 +421,7 @@ export class Duel extends Component {
             let content = hasCard ?
                 (<div className="bubble">
                     <div className="bubble">
-                        {field.FieldField.Status.FaceDown ?
+                        {field.FieldField.Status.FaceDown && !this.state.processing ?
                             <button onClick={evt => this.effectFromField(5)}>发动</button> :
                             ""}
                         <button onClick={evt => this.showDetail(field.FieldField)}>详细</button>
@@ -736,7 +753,7 @@ export class Duel extends Component {
                             ""} width={100 + "%"} />
                     </div>
                     {enemySpells()}
-                    <div id="eex" style={{ marginLeft: "5%" }} className="square"></div>
+                    <div id="eex" style={{ marginLeft: "5%", visibility: "hidden" }} className="square"></div>
                 </div>
                 {this.blank(3)}
                 <div style={{ display: "table", width: "100%" }}>
@@ -754,7 +771,7 @@ export class Duel extends Component {
                 </div>
                 {this.blank(3)}
                 <div style={{ display: "table", width: "100%" }}>
-                    <div id="pex" style={{ marginRight: "5%" }} className="square"></div>
+                    <div id="pex" style={{ marginRight: "5%", visibility: "hidden" }} className="square"></div>
                     {playerSpells()}
                     <div style={{ marginLeft: "5%" }} className="bubble square" id="pdk">
                         <img src={this.state.data.PlayerDeckCount > 0 ?
@@ -770,8 +787,7 @@ export class Duel extends Component {
             let cnt = hands ? hands.length : 0;
             let squares = [];
             squares.push(
-                <div className="square" key={0} style={{ marginRight: "3%", visibility: "hidden" }} >
-                </div>);
+                <div key={0} className="square" style={{ width: "10px", visibility: "hidden" }}></div>);
             for (let i = 0; i < cnt; i++) {
                 squares.push(
                     <div className="bubble square" key={"ph" + i} style={{ marginRight: "3%" }}>
@@ -783,7 +799,7 @@ export class Duel extends Component {
                                 ""}
                             {hands[i] ?
                                 ((hands[i].CardCategory !== 0 || this.state.data.CanSummon) && !this.state.processing ?
-                                    <button onClick={evt => this.setFromHands(i)}>放置</button> : "") :
+                                    <button onClick={evt => this.setFromHands(i)}>盖放</button> : "") :
                                 ""}
                             <button onClick={evt => this.showDetail(hands[i])}>详细</button>
                         </div>
@@ -834,8 +850,7 @@ export class Duel extends Component {
             let cnt = this.state.data.EnemyHandsCount || 0;
             let squares = [];
             squares.push(
-                <div className="square" key={0} style={{ marginRight: "3%", visibility: "hidden" }} >
-                </div>);
+                <div key={0} className="square" style={{ width: "10px", visibility: "hidden" }}></div>);
             for (let i = 0; i < cnt; i++) {
                 squares.push(
                     <div className="square" key={"eh" + i} style={{ marginRight: "3%" }}>
@@ -855,16 +870,21 @@ export class Duel extends Component {
                 return;
             let content = [];
             if (card.CardCategory === 0) {
-                content.push(<div key={1}>等级：{card.Level}</div>);
-                content.push(<div key={2}>攻击力：{card.ATK}</div>);
-                content.push(<div key={3}>守备力：{card.DEF}</div>);
-                content.push(<div key={4}>种族：{this.mtype[card.MonsterType] + "族"}</div>);
-                content.push(<div key={5}>属性：{this.atext[card.Attribute] + "属性"}</div>);
-                content.push(<div key={6}>召唤魔族：{this.satext[card.SummonedAttribute] + "魔族"}</div>);
+                content.push(
+                    <Descriptions key={1} bordered column={{ lg: 2 }} size="small" layout="vertical">
+                        <Descriptions.Item label="攻击力">{card.ATK}</Descriptions.Item>
+                        <Descriptions.Item label="守备力">{card.DEF}</Descriptions.Item>
+                        <Descriptions.Item label="等级">{card.Level}</Descriptions.Item>
+                        <Descriptions.Item label="种族">{this.mtype[card.MonsterType] + "族"}</Descriptions.Item>
+                        <Descriptions.Item label="属性">{this.atext[card.Attribute] + "属性"}</Descriptions.Item>
+                        <Descriptions.Item label="召唤魔族">{this.satext[card.SummonedAttribute] + "魔族"}</Descriptions.Item>
+                        <Descriptions.Item label="描述">{card.CardText}</Descriptions.Item>
+                    </Descriptions>);
             } else {
                 content.push(
                     <div key={7} style={{ textAlign: "center", fontSize: "15px" }}>
                         {this.icon[card.Icon]}{card.CardCategory == 1 ? "魔法卡" : "陷阱卡"}
+                        <div style={style}>{card.CardText}</div>
                     </div>);
             }
             const style = {
@@ -876,7 +896,6 @@ export class Duel extends Component {
                 <Card cover={<img src={`/pics/${card.Password}.jpg`} />}>
                     <h4>{card.Cname}/{card.Name}</h4>
                     {content}
-                    <div style={style}>{card.CardText}</div>
                 </Card>);
         }
 
@@ -923,16 +942,21 @@ export class Duel extends Component {
                 let card = list[i];
                 let content = [];
                 if (card.CardCategory === 0) {
-                    content.push(<div key={1}>等级：{card.Level}</div>);
-                    content.push(<div key={2}>攻击力：{card.ATK}</div>);
-                    content.push(<div key={3}>守备力：{card.DEF}</div>);
-                    content.push(<div key={4}>种族：{this.mtype[card.MonsterType] + "族"}</div>);
-                    content.push(<div key={5}>属性：{this.atext[card.Attribute] + "属性"}</div>);
-                    content.push(<div key={6}>召唤魔族：{this.satext[card.SummonedAttribute] + "魔族"}</div>);
+                    content.push(
+                        <Descriptions key={1} bordered column={{ lg: 2 }} size="small" layout="vertical">
+                            <Descriptions.Item label="攻击力">{card.ATK}</Descriptions.Item>
+                            <Descriptions.Item label="守备力">{card.DEF}</Descriptions.Item>
+                            <Descriptions.Item label="等级">{card.Level}</Descriptions.Item>
+                            <Descriptions.Item label="种族">{this.mtype[card.MonsterType] + "族"}</Descriptions.Item>
+                            <Descriptions.Item label="属性">{this.atext[card.Attribute] + "属性"}</Descriptions.Item>
+                            <Descriptions.Item label="召唤魔族">{this.satext[card.SummonedAttribute] + "魔族"}</Descriptions.Item>
+                            <Descriptions.Item label="描述">{card.CardText}</Descriptions.Item>
+                        </Descriptions>);
                 } else {
                     content.push(
                         <div key={7} style={{ textAlign: "center", fontSize: "15px" }}>
                             {this.icon[card.Icon]}{card.CardCategory == 1 ? "魔法卡" : "陷阱卡"}
+                            <div style={style}>{card.CardText}</div>
                         </div>);
                 }
 
@@ -940,7 +964,6 @@ export class Duel extends Component {
                     <Card key={i} cover={<img src={`/pics/${card.Password}.jpg`} size="small" />}>
                         <h4>{card.Cname}/{card.Name}</h4>
                         {content}
-                        <div style={style}>{card.CardText}</div>
                         {this.state.processing ?
                             <Button style={{ marginLeft: "44%" }} onClick={() => this.effectTarget(card.UID)} type="primary">选择</Button> :
                             ""}
@@ -969,7 +992,7 @@ export class Duel extends Component {
                                     {this.state.ready ? "准备中" : "准备"}</Button>
                                 ) : ""}
                         </div>
-                        <div style={{ transform: "translate(0, 150px)" }}>
+                        <div style={{ transform: "translate(0, 150px)", width: "90%" }}>
                             {card()}
                         </div>
                     </div>
@@ -1003,7 +1026,7 @@ export class Duel extends Component {
                         {carousel(selectList())}
                     </Modal>
                     <Modal
-                        visible={this.state.result}
+                        visible={this.state.result !== null}
                         closable={false}
                         footer={null}
                     >
@@ -1013,15 +1036,14 @@ export class Duel extends Component {
                                 <Icon type="frown" theme="twoTone" />
                             }
                             title={this.state.result}
-                            extra={[<Button type="primary" key="save">保存战报</Button>,
-                            <Button key="back">返回</Button>]}
+                            extra={[<Button type="primary" key="save" onClick={this.saveLog}>保存战报</Button>,
+                            <Button key="back" onClick={() => this.props.history.push('/')}>返回</Button>]}
                         />
                     </Modal>
                     <div className="right">
-
                         {this.state.data.UID ?
                             (<div>
-                                <textarea id="msg" value={this.state.log} readOnly={true}
+                                <textarea value={this.state.log} readOnly={true} ref={log => this.textLog = log}
                                     style={{
                                         height: "500px", width: 100 + "%", resize: "none", backgroundColor: "transparent", color: "white"
                                     }}>

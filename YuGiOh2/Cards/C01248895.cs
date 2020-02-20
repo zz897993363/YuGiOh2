@@ -20,7 +20,7 @@ namespace YuGiOh2.Cards
                     continue;
 
                 var result = player.Enemy.Deck.Where(c => c.Password == player.Enemy.Field.MonsterFields[i].Password).ToList();
-                for (int j = result.Count - 1; j >= 0 ; j++)
+                for (int j = result.Count - 1; j >= 0 ; j--)
                 {
                     var card = result[j];
                     player.Enemy.AddCardToGrave(ref card);

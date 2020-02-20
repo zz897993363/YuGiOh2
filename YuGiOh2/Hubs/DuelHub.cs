@@ -114,6 +114,9 @@ namespace YuGiOh2.Hubs
                 return;
 
             Player1.SummonMonsterFromHands(cardID);
+            if (Player1.Hands.Any(c => c.UID == cardID))
+                return;
+
             Player1.ProcessContinuousEffectWhenSummon(cardID);
             Player2.ProcessContinuousEffectWhenSummon(cardID);
             Player1.CheckTrapsWhenSummon();
@@ -135,6 +138,8 @@ namespace YuGiOh2.Hubs
             Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
 
             Player1.EffectFromHands(cardID);
+            if (Player1.Hands.Any(c => c.UID == cardID))
+                return;
 
             if (Player1.ChooseTarget == 0)
             {

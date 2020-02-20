@@ -29,6 +29,7 @@ namespace YuGiOh2.Cards
                 if (monster == null || monster.Status.FaceDown)
                     continue;
                 monster.Status.DefensePosition = !monster.Status.DefensePosition;
+                monster.Status.CanChangePosition = false;
             }
         }
     }

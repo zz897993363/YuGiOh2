@@ -52,6 +52,8 @@ namespace YuGiOh2.Cards
                 }
             }
             player.DiscardHands(player.Hands.Count);
+            player.TrapsWhenAttack.Clear();
+            player.TrapsWhenSummon.Clear();
         }
     }
 }

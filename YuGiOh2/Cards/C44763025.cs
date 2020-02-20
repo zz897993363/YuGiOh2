@@ -11,11 +11,12 @@ namespace YuGiOh2.Cards
 
         public static bool CheckIfAvailable(Player player)
         {
-            return true;
+            return player.HP > 1000;
         }
 
         public static void ProcessEffect(Player player)
         {
+            player.DecreaseHP(1000);
             player.Enemy.DiscardHands(2);
         }
     }

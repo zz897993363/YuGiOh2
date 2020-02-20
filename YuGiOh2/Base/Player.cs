@@ -165,7 +165,7 @@ namespace YuGiOh2.Base
             {
                 Card card = Hands[Hands.Count - 1];
                 Message += $"你丢弃了【{card.Cname}】\r\n";
-                Enemy.Message += "对手丢弃了【{card.Cname}】\r\n";
+                Enemy.Message += $"对手丢弃了【{card.Cname}】\r\n";
                 Hands.Remove(card);
                 AddCardToGrave(ref card);
             }
@@ -295,8 +295,8 @@ namespace YuGiOh2.Base
 
         private void EffectFieldFromHands(SpellAndTrapCard card)
         {
-            Message += $"你发动了场地魔法卡：{card.Cname}\r\n";
-            Enemy.Message += $"对手发动了场地魔法卡：{card.Cname}\r\n";
+            Message += $"你发动了场地魔法卡【{card.Cname}】\r\n";
+            Enemy.Message += $"对手发动了场地魔法卡【{card.Cname}】\r\n";
             if (Field.FieldField != null)
             {
                 if (Field.FieldField.Status.FaceDown)
