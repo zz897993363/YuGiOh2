@@ -1,10 +1,11 @@
 ﻿import React, { Component } from "react";
 import * as signalR from '@microsoft/signalr';
-import { Radio, Button, Modal, Card, Carousel, Icon, Result, Descriptions, Popover } from 'antd';
+import { Radio, Button, Input, Modal, Card, Carousel, Icon, Result, Descriptions, Popover } from 'antd';
 import FileSaver from 'file-saver';
 import axios from 'axios';
 import 'antd/es/radio/style/css';
 import 'antd/es/button/style/css';
+import 'antd/es/input/style/css';
 import 'antd/es/modal/style/css';
 import 'antd/es/card/style/css';
 import 'antd/es/carousel/style/css';
@@ -34,7 +35,8 @@ export class Duel extends Component {
             focusedCard: null,
             result: null,
             deckIndex: 0,
-            deck: null
+            deck: null,
+            chat: ""
         }
         this.standBy = this.standBy.bind(this);
         this.summonFromHands = this.summonFromHands.bind(this);
@@ -51,6 +53,7 @@ export class Duel extends Component {
         this.next = this.next.bind(this);
         this.prev = this.prev.bind(this);
         this.saveLog = this.saveLog.bind(this);
+        this.chat = this.chat.bind(this);
 
         this.atext = { 0: "闇", 1: "光", 2: "地", 3: "水", 4: "炎", 5: "風", 6: "神" };
         this.acolor = { 0: "#912d8c", 1: "#fff578", 2: "#4c4e4c", 3: "#70caee", 4: "#ff0000", 5: "#8ac89b", 6: "#fff578" };
@@ -77,6 +80,7 @@ export class Duel extends Component {
         this.connection.on("onlineNums", num => this.setState({ onlineNums: num }));
         this.connection.on("duelInit", game => this.duelInit(game));
         this.connection.on("renderGame", game => this.renderGame(game));
+        this.connection.on("updateChatroom", msg => this.updateChatroom(msg));
 
         this.connection.start()
             .then(() => {
@@ -137,6 +141,22 @@ export class Duel extends Component {
     saveLog() {
         let blob = new Blob([this.state.log], { type: "text/plain;charset=utf-8" });
         FileSaver.saveAs(blob, "战报" + Date.now());
+    }
+
+    chat() {
+        if (this.state.input === "") {
+            return;
+        }
+        this.connection.invoke("Chat", this.state.data.UID, this.state.input);
+        this.setState({ input: "" })
+    }
+
+    updateChatroom(msg) {
+        let chat = this.state.chat;
+        this.setState({ chat: chat + msg + "\r\n" });
+        if (this.textChat) {
+            this.textChat.scrollTop = this.textChat.scrollHeight;
+        }
     }
 
     standBy() {
@@ -797,7 +817,12 @@ export class Duel extends Component {
                 </div>
                 {this.blank(3)}
                 <div style={{ display: "table", width: "100%" }}>
-                    <div id="pex" style={{ marginRight: "5%", visibility: "hidden" }} className="square"></div>
+                    <div id="pex" style={{ marginRight: "5%", border: "none" }} className="square">
+                        <Button type="danger" style={{ marginTop: "40%" }}
+                            disabled={!this.state.data.Enable && !this.state.processing}
+                            onClick={this.endPhase}>
+                            {this.state.data.Enable ? "结束回合" : "对手回合"}</Button>
+                    </div>
                     {playerSpells()}
                     <div style={{ marginLeft: "5%" }} className="bubble square" id="pdk">
                         <img src={this.state.data.PlayerDeckCount > 0 ?
@@ -1127,11 +1152,19 @@ export class Duel extends Component {
                                         height: "500px", width: 100 + "%", resize: "none", backgroundColor: "transparent", color: "white"
                                     }}>
                                 </textarea>
-                                {this.blank(3)}
-                                <Button type="danger" style={{ marginTop: "5%" }}
-                                    disabled={!this.state.data.Enable && !this.state.processing}
-                                    onClick={this.endPhase}>
-                                    {this.state.data.Enable ? "结束回合" : "对手回合"}</Button>
+                                {this.blank(10)}
+                                <textarea value={this.state.chat} readOnly={true} ref={chat => this.textChat = chat}
+                                    style={{
+                                        height: "250px", width: 100 + "%", resize: "none", backgroundColor: "transparent", color: "white"
+                                    }}>
+                                </textarea>
+                                {this.blank(1)}
+                                <Input value={this.state.input} onChange={evt => this.setState({ input: evt.target.value })}
+                                    onKeyPress={evt => {
+                                        if (evt.charCode === 13)
+                                            this.chat();
+                                    }}
+                                    style={{ backgroundColor: "transparent", color: "white" }} placeholder="请输入聊天内容" />
                             </div>) :
                             ""}
                     </div>

@@ -339,6 +339,16 @@ namespace YuGiOh2.Hubs
             await OnlineNumbers();
         }
 
+        public async void Chat(string uid, string message)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+            await Clients.Client(Player1.ID).SendAsync("updateChatroom", "你：" + message);
+            await Clients.Client(Player2.ID).SendAsync("updateChatroom", "对方：" + message);
+        }
+
         public override Task OnConnectedAsync()
         {
             ClientIDs.Add(Context.ConnectionId);
