@@ -32,7 +32,7 @@ namespace YuGiOh2
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
-                configuration.RootPath = "ClientApp/build";
+                configuration.RootPath = "ClientApp";
             });
         }
 
@@ -69,7 +69,7 @@ namespace YuGiOh2
 
             app.UseSpa(spa =>
             {
-                //spa.Options.SourcePath = "ClientApp";
+                spa.Options.SourcePath = "ClientApp";
 
                 if (env.IsDevelopment())
                 {

@@ -13,7 +13,6 @@ namespace YuGiOh2.Hubs
     public class DuelHub : Hub
     {
         private static HashSet<string> clientIDs;
-
         public static HashSet<string> ClientIDs
         {
             get
@@ -25,7 +24,6 @@ namespace YuGiOh2.Hubs
         }
 
         private static List<string> standByIDs;
-
         public static List<string> StandByIDs
         {
             get
@@ -36,8 +34,18 @@ namespace YuGiOh2.Hubs
             }
         }
 
-        private static Dictionary<string, Game> games;
+        private static Dictionary<string, string> userConnectionIDs;
+        public static Dictionary<string, string> UserConnectionIDs
+        {
+            get
+            {
+                if (userConnectionIDs == null)
+                    userConnectionIDs = new Dictionary<string, string>();
+                return userConnectionIDs;
+            }
+        }
 
+        private static Dictionary<string, Game> games;
         public static Dictionary<string, Game> Games
         {
             get
@@ -49,7 +57,6 @@ namespace YuGiOh2.Hubs
         }
 
         private static Dictionary<string, int> decks;
-
         public static Dictionary<string, int> Decks
         {
             get
@@ -128,6 +135,14 @@ namespace YuGiOh2.Hubs
                 Games.Remove(uid);
                 Context.Abort();
             }
+        }
+
+        public async Task SendMessageToPlayer1(Player player1, Player player2, string uid)
+        {
+            var msg1 = MessageFactory.GetGameMessage(player1, player2, uid);
+            string msgStr1 = JsonConvert.SerializeObject(msg1);
+            player1.Message = "";
+            await Clients.Clients(player1.ID).SendAsync("renderGame", msgStr1);
         }
 
         public async Task SummonFromHands(string uid, string cardID)
@@ -349,9 +364,51 @@ namespace YuGiOh2.Hubs
             await Clients.Client(Player2.ID).SendAsync("updateChatroom", "对方：" + message);
         }
 
+        public async void UserIdentification(string cookie)
+        {
+            if (String.IsNullOrEmpty(cookie))
+            {
+                cookie = Guid.NewGuid().ToString();
+            }
+
+            string newID = Context.ConnectionId;
+            bool modifiedInGame = false;
+            if (UserConnectionIDs.TryGetValue(cookie, out string oldID))
+            {
+                foreach (var game in Games.Values)
+                {
+                    if (game.Player1.ID == oldID)
+                    {
+                        game.Player1.ID = newID;
+                        modifiedInGame = true;
+                        await SendMessageToPlayer1(game.Player1, game.Player2, game.UID);
+                    }
+                    else if (game.Player2.ID == oldID)
+                    {
+                        game.Player2.ID = newID;
+                        modifiedInGame = true;
+                        await SendMessageToPlayer1(game.Player2, game.Player1, game.UID);
+                    }
+                    if (modifiedInGame)
+                        break;
+                }
+            }
+            if (!modifiedInGame)
+            {
+                if (oldID != null)
+                {
+                    StandByIDs.Remove(oldID);
+                    Decks.Remove(oldID);
+                    ClientIDs.Remove(oldID);
+                }
+                ClientIDs.Add(newID);
+            }
+            UserConnectionIDs[cookie] = newID;
+            await Clients.Clients(newID).SendAsync("setCookie", cookie);
+        }
+
         public override Task OnConnectedAsync()
         {
-            ClientIDs.Add(Context.ConnectionId);
             return base.OnConnectedAsync();
         }
 

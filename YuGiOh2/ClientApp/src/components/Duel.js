@@ -81,6 +81,7 @@ export class Duel extends Component {
         this.connection.on("duelInit", game => this.duelInit(game));
         this.connection.on("renderGame", game => this.renderGame(game));
         this.connection.on("updateChatroom", msg => this.updateChatroom(msg));
+        this.connection.on("setCookie", cookie => this.setCookie(cookie));
 
         this.connection.start()
             .then(() => {
@@ -89,6 +90,7 @@ export class Duel extends Component {
             .then(
                 () => {
                     console.log(`状态：${this.connection.state}`)
+                    this.connection.invoke("UserIdentification", localStorage["yugioh2_cookie"]);
                     this.connection.invoke("OnlineNumbers")
                 })
             .catch(err => console.log(err));
@@ -99,6 +101,10 @@ export class Duel extends Component {
             }).catch(err => {
                 console.log("获取卡组失败！", err);
             });
+    }
+
+    setCookie(cookie) {
+        localStorage["yugioh2_cookie"] = cookie;
     }
 
     duelInit(game) {
