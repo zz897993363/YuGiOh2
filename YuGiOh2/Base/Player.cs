@@ -377,6 +377,13 @@ namespace YuGiOh2.Base
             ChooseTarget = 0;
         }
 
+        internal void Concede()
+        {
+            Lose = true;
+            Message += "你认输了";
+            Enemy.Message += "对手认输了";
+        }
+
         public void SetFromHands(string UID)
         {
             Card card = Hands.FirstOrDefault(c => c.UID == UID);

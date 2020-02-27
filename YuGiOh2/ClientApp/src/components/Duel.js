@@ -47,6 +47,7 @@ export class Duel extends Component {
         this.effectTarget = this.effectTarget.bind(this);
         this.changePosition = this.changePosition.bind(this);
         this.endPhase = this.endPhase.bind(this);
+        this.concede = this.concede.bind(this);
 
         this.closeDetail = this.closeDetail.bind(this);
         this.closeGrave = this.closeGrave.bind(this);
@@ -309,6 +310,14 @@ export class Duel extends Component {
             return;
         }
         this.connection.invoke("EndPhase", data.UID);
+    }
+
+    concede() {
+        let data = this.state.data;
+        if (data.Enable !== true) {
+            return;
+        }
+        this.connection.invoke("Concede", data.UID);
     }
 
     blank(mb) {
@@ -824,10 +833,13 @@ export class Duel extends Component {
                 {this.blank(3)}
                 <div style={{ display: "table", width: "100%" }}>
                     <div id="pex" style={{ marginRight: "5%", border: "none" }} className="square">
-                        <Button type="danger" style={{ marginTop: "40%" }}
+                        <Button type="primary" style={{ marginTop: "40%" }}
                             disabled={!this.state.data.Enable && !this.state.processing}
                             onClick={this.endPhase}>
                             {this.state.data.Enable ? "结束回合" : "对手回合"}</Button>
+                        <Button type="danger" style={{ marginTop: "40%" }}
+                            disabled={!this.state.data.Enable && !this.state.processing}
+                            onClick={this.concede}>认输</Button>
                     </div>
                     {playerSpells()}
                     <div style={{ marginLeft: "5%" }} className="bubble square" id="pdk">

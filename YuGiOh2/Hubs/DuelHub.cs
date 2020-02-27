@@ -324,6 +324,18 @@ namespace YuGiOh2.Hubs
             await SendMessage(Player1, Player2, uid);
         }
 
+        public async Task Concede(string uid)
+        {
+            string playerID = Context.ConnectionId;
+            Game game = Games[uid];
+            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+            Player1.Concede();
+            await SendMessage(Player1, Player2, uid);
+            Games.Remove(uid);
+            Context.Abort();
+        }
+
         public async Task OnlineNumbers()
         {
             await Clients.All.SendAsync("onlineNums", ClientIDs.Count + StandByIDs.Count + Games.Count * 2);
