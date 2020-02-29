@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using MoonSharp.Interpreter;
 using YuGiOh2.Data;
-using YuGiOh2.Models;
 
 namespace YuGiOh2.Base
 {
+    [MoonSharpUserData]
     public abstract class Card
     {
         public string UID { get; set; }
@@ -18,6 +16,7 @@ namespace YuGiOh2.Base
         public int ChooseTargetType { get; set; }
     }
 
+    [MoonSharpUserData]
     public class CardStatus
     {
         public bool FaceDown { get; set; }
@@ -28,16 +27,17 @@ namespace YuGiOh2.Base
         public int AttackChances { get; set; }
     }
 
-    public interface ICardAction
-    {
-        public abstract void ComeIntoField();
-        public abstract void ComeIntoGrave();
-        public abstract void Destroyed();
-        public abstract void Banished();
-        public abstract void Sacrificed();
-    }
+    //public interface ICardAction
+    //{
+    //    public abstract void ComeIntoField();
+    //    public abstract void ComeIntoGrave();
+    //    public abstract void Destroyed();
+    //    public abstract void Banished();
+    //    public abstract void Sacrificed();
+    //}
 
-    public class MonsterCard : Card, ICardAction
+    [MoonSharpUserData]
+    public class MonsterCard : Card//, ICardAction
     {
         public int Attribute { get; set; }
         public int Level { get; set; }
@@ -110,6 +110,7 @@ namespace YuGiOh2.Base
         }
     }
 
+    [MoonSharpUserData]
     public class SpellAndTrapCard : Card
     {
         public int Icon { get; set; }
@@ -119,7 +120,7 @@ namespace YuGiOh2.Base
             UID = Guid.NewGuid().ToString();
             Status = new CardStatus();
         }
-
+        
         public SpellAndTrapCard(Models.Card card_m)
         {
             Icon = card_m.Icon;

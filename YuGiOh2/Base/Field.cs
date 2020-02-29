@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using MoonSharp.Interpreter;
 
 namespace YuGiOh2.Base
 {
+    [MoonSharpUserData]
     public class Field
     {
         public readonly MonsterCard[] MonsterFields;

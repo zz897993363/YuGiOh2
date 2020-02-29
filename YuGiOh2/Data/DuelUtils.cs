@@ -1,40 +1,29 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MoonSharp.Interpreter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 using YuGiOh2.Base;
 
 namespace YuGiOh2.Data
 {
-    public class DuelUtils
+    public static class DuelUtils
     {
-        public static DBContext DBContext { get; set; }
-
-        private static List<Models.Card> _cards;
-
-        private static List<Models.Deck> _decks;
+        public static DbContextOptionsBuilder<DBContext> Builder { get; set; }
 
         public static Models.Card GetCard(string password)
         {
-            return DBContext.Card.FirstOrDefault(c => c.Password == password);
+            return new DBContext(Builder.Options).Card.FirstOrDefault(c => c.Password == password);
         }
 
-        public static Models.Card GetFusionCard(string password1, string password2)
-        {
-            var result = DBContext.Fusion
-                .FirstOrDefault(f => f.Password1 == password1 && f.Password2 == password2 ||
-                f.Password1 == password2 && f.Password2 == password1);
+        //public static Models.Card GetFusionCard(string password1, string password2)
+        //{
+        //    var result = new DBContext(Builder.Options).Fusion
+        //        .FirstOrDefault(f => f.Password1 == password1 && f.Password2 == password2 ||
+        //        f.Password1 == password2 && f.Password2 == password1);
 
-            return result == null ? null : GetCard(result.PasswordResult);
-        }
-
-        public static int AddCard(Models.Card card)
-        {
-            DBContext.Card.Add(card);
-            return DBContext.SaveChanges();
-        }
+        //    return result == null ? null : GetCard(result.PasswordResult);
+        //}
 
         public static void ResetCard(ref Card card)
         {
@@ -55,18 +44,22 @@ namespace YuGiOh2.Data
         {
             string pwd = card.Password;
             string uid = card.UID;
-            var card_m = _cards.FirstOrDefault(c => c.Password == pwd);
-            card = new MonsterCard(card_m);
-            card.UID = uid;
+            var card_m = new DBContext(Builder.Options).Card.FirstOrDefault(c => c.Password == pwd);
+            card = new MonsterCard(card_m)
+            {
+                UID = uid
+            };
         }
 
         public static void ResetCard(ref SpellAndTrapCard card)
         {
             string pwd = card.Password;
             string uid = card.UID;
-            var card_m = _cards.FirstOrDefault(c => c.Password == pwd);
-            card = new SpellAndTrapCard(card_m);
-            card.UID = uid;
+            var card_m = new DBContext(Builder.Options).Card.FirstOrDefault(c => c.Password == pwd);
+            card = new SpellAndTrapCard(card_m)
+            {
+                UID = uid
+            };
         }
 
         internal static List<Card> GetRandomDeck()
@@ -105,21 +98,23 @@ namespace YuGiOh2.Data
                 deck.Remove(card);
                 deck2.Add(card);
             }
+            deck2.Add(new SpellAndTrapCard(spellAndTraps.FirstOrDefault(c => c.Password == "04031928")));
             return deck2;
         }
 
         internal static List<Card> GetDeck(int index)
         {
-            var deck_m = _decks.FirstOrDefault(d => d.Id == index);
+            var deck_m = new DBContext(Builder.Options).Deck.ToList().FirstOrDefault(d => d.Id == index);
             if (deck_m == null)
                 return null;
 
+            var cards_m = new DBContext(Builder.Options).Card;
             string[] pwds = deck_m.Composition.Split(',');
             List<Card> deck = new List<Card>();
             Random rd = new Random();
             foreach (var pwd in pwds)
             {
-                var card_m = _cards.FirstOrDefault(c => c.Password == pwd);
+                var card_m = cards_m.FirstOrDefault(c => c.Password == pwd);
                 if (card_m.Category == 0)
                 {
                     deck.Insert(rd.Next(deck.Count), new MonsterCard(card_m));
@@ -142,16 +137,38 @@ namespace YuGiOh2.Data
 
         public static List<Models.Card> GetAllCards()
         {
-            if (_cards == null)
-                _cards = DBContext.Card.ToList();
-            return _cards;
+            return new DBContext(Builder.Options).Card.ToList();
         }
 
         public static List<Models.Deck> GetAllDecks()
         {
-            if (_decks == null)
-                _decks = DBContext.Deck.ToList();
-            return _decks;
+            return new DBContext(Builder.Options).Deck.ToList();
+        }
+
+        public static void LoadScripts(Game game)
+        {
+            Dictionary<string, Script> scripts = new Dictionary<string, Script>();
+            AddScripts(game.Player1, scripts);
+            AddScripts(game.Player2, scripts);
+            game.Player1.CardScripts = scripts;
+            game.Player2.CardScripts = scripts;
+        }
+
+        private static void AddScripts(Player player, Dictionary<string, Script> scripts)
+        {
+            foreach (var card in player.Deck)
+            {
+                if (scripts.ContainsKey(card.Password))
+                    continue;
+
+                string path = Environment.CurrentDirectory + $@"\Scripts\C{card.Password}.lua";
+                if (!System.IO.File.Exists(path))
+                    continue;
+
+                Script script = new Script();
+                script.DoFile(path);
+                scripts.Add(card.Password, script);
+            }
         }
     }
 

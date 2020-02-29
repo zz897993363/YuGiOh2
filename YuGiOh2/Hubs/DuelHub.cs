@@ -12,62 +12,17 @@ namespace YuGiOh2.Hubs
 {
     public class DuelHub : Hub
     {
-        private static HashSet<string> clientIDs;
-        public static HashSet<string> ClientIDs
-        {
-            get
-            {
-                if (clientIDs == null)
-                    clientIDs = new HashSet<string>();
-                return clientIDs;
-            }
-        }
+        public static HashSet<string> ClientIDs = new HashSet<string>();
 
-        private static List<string> standByIDs;
-        public static List<string> StandByIDs
-        {
-            get
-            {
-                if (standByIDs == null)
-                    standByIDs = new List<string>();
-                return standByIDs;
-            }
-        }
+        public static List<string> StandByIDs = new List<string>();
 
-        private static Dictionary<string, string> userConnectionIDs;
-        public static Dictionary<string, string> UserConnectionIDs
-        {
-            get
-            {
-                if (userConnectionIDs == null)
-                    userConnectionIDs = new Dictionary<string, string>();
-                return userConnectionIDs;
-            }
-        }
+        public static Dictionary<string, string> UserConnectionIDs = new Dictionary<string, string>();
 
-        private static Dictionary<string, Game> games;
-        public static Dictionary<string, Game> Games
-        {
-            get
-            {
-                if (games == null)
-                    games = new Dictionary<string, Game>();
-                return games;
-            }
-        }
+        public static Dictionary<string, Game> Games = new Dictionary<string, Game>();
 
-        private static Dictionary<string, int> decks;
-        public static Dictionary<string, int> Decks
-        {
-            get
-            {
-                if (decks == null)
-                    decks = new Dictionary<string, int>();
-                return decks;
-            }
-        }
+        public static Dictionary<string, int> Decks = new Dictionary<string, int>();
 
-        private static readonly object obj = new object();
+        private static readonly SemaphoreSlim readLock = new SemaphoreSlim(1, 1);
 
         public async Task LogError(Exception ex)
         {
@@ -86,39 +41,41 @@ namespace YuGiOh2.Hubs
             {
                 game.Player2.Deck = DuelUtils.GetDeck(Decks[id2]);
             }
+            DuelUtils.LoadScripts(game);
             Games.Add(game.UID, game);
             game.Player1.DrawPhase();
             game.Player2.DrawPhase();
+            game.Player1.FirstTurn = true;
             game.Player2.YourTurn = false;
-            var msg1 = MessageFactory.GetGameMessage(game.Player1, game.Player2, game.UID);
-            var msg2 = MessageFactory.GetGameMessage(game.Player2, game.Player1, game.UID);
-            string msgStr1 = JsonConvert.SerializeObject(msg1);
-            string msgStr2 = JsonConvert.SerializeObject(msg2);
-            await Clients.Clients(id1).SendAsync("duelInit", msgStr1);
-            await Clients.Clients(id2).SendAsync("duelInit", msgStr2);
+            await SendMessage(game.Player1, game.Player2, game.UID);
         }
 
-        public void InitComplete(string uid)
-        {
-            lock (obj)
-            {
-                Games[uid].InitCount++;
-                if (Games[uid].InitCount > 1)
-                {
-                    TurnStart(uid, Games[uid].Player1.ID);
-                }
-            }
-        }
+        //public async void InitComplete(string uid)
+        //{
+        //    await readLock.WaitAsync();
+        //    try
+        //    {
+        //        Games[uid].InitCount++;
+        //        if (Games[uid].InitCount > 1)
+        //        {
+        //            await TurnStart(uid, Games[uid].Player1.ID);
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        readLock.Release();
+        //    }
+        //}
 
-        public async Task TurnStart(string uid, string playerID)
-        {
-            Game game = Games[uid];
-            Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
-            Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
-            Player1.DrawPhase();
-            Player1.FirstTurn = true;
-            await SendMessage(Player1, Player2, uid);
-        }
+        //public async Task TurnStart(string uid, string playerID)
+        //{
+        //    Game game = Games[uid];
+        //    Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
+        //    Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
+        //    Player1.DrawPhase();
+        //    Player1.FirstTurn = true;
+        //    await SendMessage(Player1, Player2, uid);
+        //}
 
         public async Task SendMessage(Player player1, Player player2, string uid)
         {
@@ -165,7 +122,14 @@ namespace YuGiOh2.Hubs
             {
                 await SendMessage(Player1, Player2, uid);
                 Thread.Sleep(500);
-                Player2.ProcessEffect(cardID);
+                try
+                {
+                    Player2.ProcessEffect(cardID);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.StackTrace);
+                }
             }
 
             await SendMessage(Player1, Player2, uid);

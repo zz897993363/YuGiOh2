@@ -79,7 +79,7 @@ export class Duel extends Component {
 
         this.connection.on("logErr", err => { console.log(err) });
         this.connection.on("onlineNums", num => this.setState({ onlineNums: num }));
-        this.connection.on("duelInit", game => this.duelInit(game));
+        //this.connection.on("duelInit", game => this.duelInit(game));
         this.connection.on("renderGame", game => this.renderGame(game));
         this.connection.on("updateChatroom", msg => this.updateChatroom(msg));
         this.connection.on("setCookie", cookie => this.setCookie(cookie));
@@ -108,15 +108,15 @@ export class Duel extends Component {
         localStorage["yugioh2_cookie"] = cookie;
     }
 
-    duelInit(game) {
-        let data = JSON.parse(game);
-        let log = this.state.log;
-        log += "初始化连接\r\n";
-        this.setState({ log: log, data: data });
-        this.connection.invoke("InitComplete", data.UID);
-        log += "初始化完毕\r\n";
-        this.setState({ log: log });
-    }
+    //duelInit(game) {
+    //    let data = JSON.parse(game);
+    //    let log = this.state.log;
+    //    log += "初始化连接\r\n";
+    //    this.setState({ log: log, data: data });
+    //    this.connection.invoke("InitComplete", data.UID);
+    //    log += "初始化完毕\r\n";
+    //    this.setState({ log: log });
+    //}
 
     renderGame(game) {
         let data = JSON.parse(game);

@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MoonSharp.Interpreter;
+using System;
+using System.Reflection;
+using YuGiOh2.Base;
 using YuGiOh2.Data;
 using YuGiOh2.Hubs;
 
@@ -24,8 +28,10 @@ namespace YuGiOh2
         public void ConfigureServices(IServiceCollection services)
         {
             var mysqlString = Configuration.GetConnectionString("MySqlConnection");
-            services.AddDbContext<DBContext>(options => options.UseMySql(mysqlString));
-            DuelUtils.DBContext = services.BuildServiceProvider().GetService<DBContext>();
+            services.AddDbContextPool<DBContext>(options => options.UseMySql(mysqlString));
+            //DuelUtils.DBContext = services.BuildServiceProvider().GetService<DBContext>();
+            DuelUtils.Builder = new DbContextOptionsBuilder<DBContext>().UseMySql(mysqlString);
+            services.AddSingleton<DbContext, DBContext>();
             services.AddMvc(options => options.EnableEndpointRouting = false);
             services.AddSignalR();
 
@@ -42,6 +48,7 @@ namespace YuGiOh2
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                Environment.CurrentDirectory = @"G:\ygo2\YuGiOh2";
             }
             else
             {
@@ -49,7 +56,8 @@ namespace YuGiOh2
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            UserData.RegisterAssembly(assembly);
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseSpaStaticFiles();

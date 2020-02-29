@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using MoonSharp.Interpreter;
 using YuGiOh2.Data;
 
 namespace YuGiOh2.Base
 {
+    [MoonSharpUserData]
     public class Player
     {
         public string ID { get; set; }
@@ -28,26 +30,33 @@ namespace YuGiOh2.Base
         /// 正在发动中的卡牌
         /// </summary>
         public SpellAndTrapCard EffectingCard { get; set; }
-        /// <summary>
-        /// 处理当回合有效的效果结算
-        /// </summary>
-        public Queue<(MethodInfo methodInfo, string targetID)> EffectTillEndPhase { get; set; }
-        /// <summary>
-        /// 处理召唤时结算的永续效果
-        /// </summary>
-        public Dictionary<string, (MethodInfo methodInfo, string targetID)> EffectWhenSummon { get; set; }
-        /// <summary>
-        /// 处理盖怪时结算的永续效果
-        /// </summary>
-        public Dictionary<string, (MethodInfo methodInfo, string targetID)> EffectWhenSetMonster { get; set; }
-        /// <summary>
-        /// 处理攻击时结算的永续效果
-        /// </summary>
-        public Dictionary<string, (MethodInfo methodInfo, string targetID)> EffectWhenAttack { get; set; }
-        /// <summary>
-        /// 自身离场时结算的效果
-        /// </summary>
-        public Dictionary<string, (MethodInfo methodInfo, string targetID)> EffectWhenSelfLeave { get; set; }
+        ///// <summary>
+        ///// 处理当回合有效的效果结算
+        ///// </summary>
+        //public Queue<(MethodInfo methodInfo, string targetID)> EffectTillEndPhase { get; set; }
+        ///// <summary>
+        ///// 处理召唤时结算的永续效果
+        ///// </summary>
+        //public Dictionary<string, (MethodInfo methodInfo, string targetID)> EffectWhenSummon { get; set; }
+        ///// <summary>
+        ///// 处理盖怪时结算的永续效果
+        ///// </summary>
+        //public Dictionary<string, (MethodInfo methodInfo, string targetID)> EffectWhenSetMonster { get; set; }
+        ///// <summary>
+        ///// 处理攻击时结算的永续效果
+        ///// </summary>
+        //public Dictionary<string, (MethodInfo methodInfo, string targetID)> EffectWhenAttack { get; set; }
+        ///// <summary>
+        ///// 自身离场时结算的效果
+        ///// </summary>
+        //public Dictionary<string, (MethodInfo methodInfo, string targetID)> EffectWhenSelfLeave { get; set; }
+
+        public Queue<(Script script, DynValue function, string targetID)> EffectTillEndPhaseScripts { get; set; }
+        public Dictionary<string, (Script script, DynValue function, string targetID)> EffectWhenSummonScripts { get; set; }
+        public Dictionary<string, (Script script, DynValue function, string targetID)> EffectWhenSetMonsterScripts { get; set; }
+        public Dictionary<string, (Script script, DynValue function, string targetID)> EffectWhenAttackScripts { get; set; }
+        public Dictionary<string, (Script script, DynValue function, string targetID)> EffectWhenSelfLeaveScripts { get; set; }
+
         /// <summary>
         /// 在召唤时触发的陷阱
         /// </summary>
@@ -57,6 +66,10 @@ namespace YuGiOh2.Base
         /// </summary>
         public Queue<SpellAndTrapCard> TrapsWhenAttack { get; set; }
 
+        [MoonSharpHidden]
+        public Dictionary<string, Script> CardScripts { get; set; }
+
+        [MoonSharpHidden]
         public Player(ICollection<Card> cards = null, string id = null, int hp = 8000)
         {
             ID = id;
@@ -65,11 +78,16 @@ namespace YuGiOh2.Base
             Grave = new List<Card>();
             Deck = new List<Card>(cards ?? new Card[] { });
             Hands = new List<Card>();
-            EffectTillEndPhase = new Queue<(MethodInfo methodInfo, string targetID)>();
-            EffectWhenAttack = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
-            EffectWhenSummon = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
-            EffectWhenSetMonster = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
-            EffectWhenSelfLeave = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
+            //EffectTillEndPhase = new Queue<(MethodInfo methodInfo, string targetID)>();
+            //EffectWhenAttack = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
+            //EffectWhenSummon = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
+            //EffectWhenSetMonster = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
+            //EffectWhenSelfLeave = new Dictionary<string, (MethodInfo methodInfo, string targetID)>();
+            EffectTillEndPhaseScripts = new Queue<(Script script, DynValue function, string targetID)>();
+            EffectWhenAttackScripts = new Dictionary<string, (Script script, DynValue function, string targetID)>();
+            EffectWhenSummonScripts = new Dictionary<string, (Script script, DynValue function, string targetID)>();
+            EffectWhenSetMonsterScripts = new Dictionary<string, (Script script, DynValue function, string targetID)>();
+            EffectWhenSelfLeaveScripts = new Dictionary<string, (Script script, DynValue function, string targetID)>();
             TrapsWhenSummon = new Queue<SpellAndTrapCard>();
             TrapsWhenAttack = new Queue<SpellAndTrapCard>();
         }
@@ -125,11 +143,16 @@ namespace YuGiOh2.Base
 
         public void EndPhase()
         {
-            while (EffectTillEndPhase.Count > 0)
+            while (EffectTillEndPhaseScripts.Count > 0)
             {
-                var t = EffectTillEndPhase.Dequeue();
-                t.methodInfo.Invoke(null, new object[] { t.targetID, this });
+                var (script, function, targetID) = EffectTillEndPhaseScripts.Dequeue();
+                script.Call(function, targetID, this);
             }
+            //while (EffectTillEndPhase.Count > 0)
+            //{
+            //    var (methodInfo, targetID) = EffectTillEndPhase.Dequeue();
+            //    methodInfo.Invoke(null, new object[] { targetID, this });
+            //}
             Message += $"你结束了回合（生命值：{HP}）\r\n";
             Enemy.Message += $"对手结束了回合（生命值：{HP}）\r\n";
             while (Hands.Count > 5)
@@ -212,10 +235,11 @@ namespace YuGiOh2.Base
                 card.Status.AttackChances = 1;
             }
             Hands.Remove(card);
-            if (Field.MonsterFields[fieldIndex] != null)
-                Fusion(card, fieldIndex);
-            else
-                Field.MonsterFields[fieldIndex] = card;
+            //if (Field.MonsterFields[fieldIndex] != null)
+            //    Fusion(card, fieldIndex);
+            //else
+            //    Field.MonsterFields[fieldIndex] = card;
+            Field.MonsterFields[fieldIndex] = card;
             CanSummon = false;
             Message += $"你召唤了【{card.Cname}】\r\n";
             Enemy.Message += $"对手召唤了【{card.Cname}】\r\n";
@@ -257,20 +281,32 @@ namespace YuGiOh2.Base
             EffectingCard = card;
             Message += $"你场上的【{card.Cname}】效果发动！\r\n";
             Enemy.Message += $"对手场上的【{card.Cname}】效果发动！\r\n";
-            Type type = Type.GetType("YuGiOh2.Cards.C" + card.Password);
-            MethodInfo methodInfo = type.GetMethod("CheckIfAvailable");
-            bool availbale = (bool)methodInfo.Invoke(null, new object[] { this });
-            if (availbale)
+
+            if (CardScripts.TryGetValue(card.Password, out Script script))
             {
-                PropertyInfo propertyInfo = type.GetProperty("Type");
-                ChooseTarget = (int)propertyInfo.GetValue(null);
+                DynValue available = script.Call(script.Globals["checkIfAvailable"], this);
+                if (available.Boolean)
+                {
+                    ChooseTarget = (int)script.Globals.Get("Type").Number;
+                    return;
+                }
             }
             else
             {
-                ChooseTarget = -1;
-                Message += $"你的【{card.Cname}】发动时机不正确，没有效果！\r\n";
-                Enemy.Message += $"对手的【{card.Cname}】发动时机不正确，没有效果！\r\n";
+                Type type = Type.GetType("YuGiOh2.Cards.C" + card.Password);
+                MethodInfo methodInfo = type.GetMethod("CheckIfAvailable");
+                bool availbale = (bool)methodInfo.Invoke(null, new object[] { this });
+                if (availbale)
+                {
+                    PropertyInfo propertyInfo = type.GetProperty("Type");
+                    ChooseTarget = (int)propertyInfo.GetValue(null);
+                    return;
+                }
             }
+
+            ChooseTarget = -1;
+            Message += $"你的【{card.Cname}】发动时机不正确，没有效果！\r\n";
+            Enemy.Message += $"对手的【{card.Cname}】发动时机不正确，没有效果！\r\n";
         }
 
         private void SetField(SpellAndTrapCard card)
@@ -323,38 +359,22 @@ namespace YuGiOh2.Base
             Enemy.AddCardToGrave(ref tmp);
             Enemy.Field.FieldField = null;
             Enemy.ProcessEffectWhenLeave(tmp.UID);
-            Enemy.EffectWhenSummon.Remove(tmp.UID);
-            Enemy.EffectWhenSetMonster.Remove(tmp.UID);
-            Enemy.EffectWhenAttack.Remove(tmp.UID);
-            Enemy.EffectWhenSelfLeave.Remove(tmp.UID);
+            //Enemy.EffectWhenSummon.Remove(tmp.UID);
+            //Enemy.EffectWhenSetMonster.Remove(tmp.UID);
+            //Enemy.EffectWhenAttack.Remove(tmp.UID);
+            //Enemy.EffectWhenSelfLeave.Remove(tmp.UID);
         }
 
         public void ProcessEffect(string targetID)
         {
-            Type type = Type.GetType("YuGiOh2.Cards.C" + EffectingCard.Password);
-            MethodInfo methodInfo;
-            if (EffectingCard.Icon == 2)
+            if (CardScripts.TryGetValue(EffectingCard.Password, out Script script))
             {
-                methodInfo = type.GetMethod("ProcessWhenSummon");
-                EffectWhenSummon.Add(EffectingCard.UID, (methodInfo, null));
-                methodInfo = type.GetMethod("ProcessWhenSetMonster");
-                EffectWhenSetMonster.Add(EffectingCard.UID, (methodInfo, null));
-                methodInfo = type.GetMethod("ProcessWhenLeave");
-                EffectWhenSelfLeave.Add(EffectingCard.UID, (methodInfo, null));
-                EffectingCard = null;
-                ProcessEnemyField();
-                methodInfo = type.GetMethod("ProcessEffect");
-                methodInfo.Invoke(null, new object[] { this });
-                return;
+                ProcessEffectByScript(script, targetID);
             }
-            methodInfo = type.GetMethod("ProcessEffect");
-            if (ChooseTarget == 0 && EffectingCard.CardCategory == 1)
+            else
             {
-                methodInfo.Invoke(null, new object[] { this });
-            }
-            else if (ChooseTarget != -1)
-            {
-                methodInfo.Invoke(null, new object[] { targetID, this });
+                throw new Exception($"没有找到{EffectingCard.Password}的卡牌脚本");
+                //ProcessEffectByReflection(targetID);
             }
 
             for (int i = 0; i < 5; i++)
@@ -368,14 +388,74 @@ namespace YuGiOh2.Base
                     Field.SpellAndTrapFields[i] = null;
                 }
             }
-            methodInfo = type.GetMethod("ProcessEndPhase");
-            if (methodInfo != null)
-            {
-                EffectTillEndPhase.Enqueue((methodInfo, targetID));
-            }
+
             EffectingCard = null;
             ChooseTarget = 0;
         }
+
+        private void ProcessEffectByScript(Script script, string targetID)
+        {
+            if (EffectingCard.Icon == 2)
+            {
+                EffectWhenSummonScripts.Add(EffectingCard.UID, (script, script.Globals.Get("processWhenSummon"), null));
+                EffectWhenSetMonsterScripts.Add(EffectingCard.UID, (script, script.Globals.Get("processWhenSetMonster"), null));
+                EffectWhenSelfLeaveScripts.Add(EffectingCard.UID, (script, script.Globals.Get("processWhenSelfLeave"), null));
+
+                script.Call(script.Globals["processEffect"], this);
+                ProcessEnemyField();
+            }
+            else
+            {
+                if (ChooseTarget == 0 && EffectingCard.CardCategory == 1)
+                {
+                    script.Call(script.Globals["processEffect"], this);
+                }
+                else if (ChooseTarget != -1)
+                {
+                    script.Call(script.Globals["processEffect"], targetID, this);
+                }
+            }
+            var function = script.Globals.Get("processEndPhase");
+            if (function.IsNotNil())
+            {
+                EffectTillEndPhaseScripts.Enqueue((script, function, targetID));
+            }
+        }
+
+        //private void ProcessEffectByReflection(string targetID)
+        //{
+        //    Type type = Type.GetType("YuGiOh2.Cards.C" + EffectingCard.Password);
+        //    MethodInfo methodInfo;
+        //    if (EffectingCard.Icon == 2)
+        //    {
+        //        methodInfo = type.GetMethod("ProcessWhenSummon");
+        //        EffectWhenSummon.Add(EffectingCard.UID, (methodInfo, null));
+        //        methodInfo = type.GetMethod("ProcessWhenSetMonster");
+        //        EffectWhenSetMonster.Add(EffectingCard.UID, (methodInfo, null));
+        //        methodInfo = type.GetMethod("ProcessWhenLeave");
+        //        EffectWhenSelfLeave.Add(EffectingCard.UID, (methodInfo, null));
+        //        ProcessEnemyField();
+        //        methodInfo = type.GetMethod("ProcessEffect");
+        //        methodInfo.Invoke(null, new object[] { this });
+        //    }
+        //    else
+        //    {
+        //        methodInfo = type.GetMethod("ProcessEffect");
+        //        if (ChooseTarget == 0 && EffectingCard.CardCategory == 1)
+        //        {
+        //            methodInfo.Invoke(null, new object[] { this });
+        //        }
+        //        else if (ChooseTarget != -1)
+        //        {
+        //            methodInfo.Invoke(null, new object[] { targetID, this });
+        //        }
+        //    }
+        //    methodInfo = type.GetMethod("ProcessEndPhase");
+        //    if (methodInfo != null)
+        //    {
+        //        EffectTillEndPhase.Enqueue((methodInfo, targetID));
+        //    }
+        //}
 
         internal void Concede()
         {
@@ -437,16 +517,31 @@ namespace YuGiOh2.Base
                     Enemy.Message += "对手盖放了一张魔法/陷阱卡\r\n";
                     if (card.CardCategory == 2)
                     {
-                        Type type = Type.GetType("YuGiOh2.Cards.C" + card.Password);
-                        PropertyInfo propertyInfo = type.GetProperty("Type");
-                        int mType = (int)propertyInfo.GetValue(null);
-                        if (mType == (int)AffectMomentType.WhenAttacked)
+                        if (CardScripts.TryGetValue(card.Password, out Script script))
                         {
-                            TrapsWhenAttack.Enqueue(card);
+                            int type = (int)script.Globals.Get("Type").Number;
+                            if (type == (int)AffectMomentType.WhenAttacked)
+                            {
+                                TrapsWhenAttack.Enqueue(card);
+                            }
+                            else if (type == (int)AffectMomentType.WhenSummoned)
+                            {
+                                TrapsWhenSummon.Enqueue(card);
+                            }
                         }
-                        else if (mType == (int)AffectMomentType.WhenSummoned)
+                        else
                         {
-                            TrapsWhenSummon.Enqueue(card);
+                            Type type = Type.GetType("YuGiOh2.Cards.C" + card.Password);
+                            PropertyInfo propertyInfo = type.GetProperty("Type");
+                            int mType = (int)propertyInfo.GetValue(null);
+                            if (mType == (int)AffectMomentType.WhenAttacked)
+                            {
+                                TrapsWhenAttack.Enqueue(card);
+                            }
+                            else if (mType == (int)AffectMomentType.WhenSummoned)
+                            {
+                                TrapsWhenSummon.Enqueue(card);
+                            }
                         }
                     }
                     break;
@@ -482,7 +577,7 @@ namespace YuGiOh2.Base
             card.Status.CanChangePosition = false;
         }
 
-        public void ProcessContinuousEffectWhenAttack(string cardID)
+        public void ProcessContinuousEffectWhenAttack(string _cardID)
         {
 
         }
@@ -501,18 +596,26 @@ namespace YuGiOh2.Base
 
         public void ProcessContinuousEffectWhenSummon(string cardID)
         {
-            foreach (var item in EffectWhenSummon.Values)
+            foreach (var (script, function, _) in EffectWhenSummonScripts.Values)
             {
-                item.methodInfo.Invoke(null, new object[] { cardID, this });
+                script.Call(function, cardID, this);
             }
+            //foreach (var (methodInfo, _) in EffectWhenSummon.Values)
+            //{
+            //    methodInfo.Invoke(null, new object[] { cardID, this });
+            //}
         }
 
         public void ProcessContinuousEffectWhenSetMonster(string cardID)
         {
-            foreach (var item in EffectWhenSetMonster.Values)
+            foreach (var (script, function, _) in EffectWhenSetMonsterScripts.Values)
             {
-                item.methodInfo.Invoke(null, new object[] { cardID, this });
+                script.Call(function, cardID, this);
             }
+            //foreach (var (methodInfo, _) in EffectWhenSetMonster.Values)
+            //{
+            //    methodInfo.Invoke(null, new object[] { cardID, this });
+            //}
         }
 
         public void CheckTrapsWhenSummon()
@@ -529,12 +632,18 @@ namespace YuGiOh2.Base
 
         public void ProcessEffectWhenLeave(string cardID)
         {
-            if (!EffectWhenSelfLeave.ContainsKey(cardID))
-                return;
-
-            EffectWhenSelfLeave[cardID].methodInfo
-                .Invoke(null, new object[] { EffectWhenSelfLeave[cardID].targetID, this });
-            EffectWhenSelfLeave.Remove(cardID);
+            if (EffectWhenSelfLeaveScripts.ContainsKey(cardID))
+            {
+                var (script, function, targetID) = EffectWhenSelfLeaveScripts[cardID];
+                script.Call(function, targetID, this);
+                EffectWhenSelfLeaveScripts.Remove(cardID);
+            }
+            //else if (EffectWhenSelfLeave.ContainsKey(cardID))
+            //{
+            //    var (methodInfo, targetID) = EffectWhenSelfLeave[cardID];
+            //    methodInfo.Invoke(null, new object[] { targetID, this });
+            //    EffectWhenSelfLeave.Remove(cardID);
+            //}
         }
 
         public void Battle(int attackerIndex, int targetIndex)
@@ -624,10 +733,30 @@ namespace YuGiOh2.Base
             }
         }
 
-        public void Fusion(Card card1, int fieldIndex)
+        public void ClearMonsterField(int index)
         {
-            var card_m = DuelUtils.GetFusionCard(card1.Password, Field.MonsterFields[fieldIndex].Password);
-            Field.MonsterFields[fieldIndex] = card_m == null ? (MonsterCard)card1 : new MonsterCard(card_m);
+            Field.MonsterFields[index] = null;
         }
+
+        public void SetMonsterField(int index, MonsterCard card)
+        {
+            Field.MonsterFields[index] = card;
+        }
+
+        public void ClearSpellAndTrapField(int index)
+        {
+            Field.SpellAndTrapFields[index] = null;
+        }
+
+        public void SetSpellAndTrapField(int index, SpellAndTrapCard card)
+        {
+            Field.SpellAndTrapFields[index] = card;
+        }
+
+        //public void Fusion(Card card1, int fieldIndex)
+        //{
+        //    var card_m = DuelUtils.GetFusionCard(card1.Password, Field.MonsterFields[fieldIndex].Password);
+        //    Field.MonsterFields[fieldIndex] = card_m == null ? (MonsterCard)card1 : new MonsterCard(card_m);
+        //}
     }
 }

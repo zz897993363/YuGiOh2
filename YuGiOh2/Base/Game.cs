@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using YuGiOh2.Data;
 
 namespace YuGiOh2.Base
@@ -35,9 +34,9 @@ namespace YuGiOh2.Base
 
     public class PlayerCollection
     {
-        private uint capacity;
+        private readonly uint capacity;
 
-        private Player[] players;
+        private readonly Player[] players;
 
         public PlayerCollection()
         {
