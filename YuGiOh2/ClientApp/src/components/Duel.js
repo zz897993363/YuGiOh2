@@ -267,6 +267,9 @@ export class Duel extends Component {
         if (data.Enable !== true) {
             return;
         }
+        if (this.state.attackerIndex > -1) {
+            return;
+        }
         if (this.state.processing) {
             return;
         }
