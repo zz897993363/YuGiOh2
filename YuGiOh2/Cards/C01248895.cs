@@ -23,10 +23,10 @@ namespace YuGiOh2.Cards
                 for (int j = result.Count - 1; j >= 0 ; j--)
                 {
                     var card = result[j];
-                    player.Enemy.AddCardToGrave(ref card);
+                    player.Enemy.AddCardToGrave(card);
                     player.Enemy.Deck.RemoveAt(j);
                 }
-                player.Enemy.AddCardToGrave(ref player.Enemy.Field.MonsterFields[i]);
+                player.Enemy.AddCardToGrave(player.Enemy.Field.MonsterFields[i]);
                 player.Enemy.Field.MonsterFields[i] = null;
             }
         }

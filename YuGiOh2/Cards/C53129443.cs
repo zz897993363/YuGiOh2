@@ -29,7 +29,7 @@ namespace YuGiOh2.Cards
                 if (player.Field.MonsterFields[i] == null)
                     continue;
 
-                player.AddCardToGrave(ref player.Field.MonsterFields[i]);
+                player.AddCardToGrave(player.Field.MonsterFields[i]);
                 player.Field.MonsterFields[i] = null;
             }
         }

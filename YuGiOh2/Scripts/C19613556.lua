@@ -6,10 +6,13 @@ function checkIfAvailable(player)
             return true;
         end
     end
-    for index, spell in pairs(player.Enemy.SpellAndTrapFields) do
+    for index, spell in pairs(player.Enemy.Field.SpellAndTrapFields) do
         if spell ~= nil then
             return true;
         end
+    end
+    if player.Field.FieldField ~= nil or player.Enemy.Field.FieldField ~= nil then
+        return true;
     end
     return false;
 end
@@ -26,6 +29,9 @@ function destroy(player)
             player:ClearSpellAndTrapField(i - 1);
         end
     end
-    player.TrapsWhenAttack:Clear();
-    player.TrapsWhenSummon:Clear();
+    if player.Field.FieldField ~= nil then
+        player.Enemy:ProcessEnemyField();
+    end
+    player:ClearTrapsWhenSummon();
+    player:ClearTrapsWhenAttack();
 end

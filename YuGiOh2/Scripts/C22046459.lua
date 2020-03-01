@@ -24,7 +24,7 @@ function processEffect(targetID, player)
             target = monster;
         end
     end
-    for i, monster in pairs(player.Field.Enemy.MonsterFields) do
+    for i, monster in pairs(player.Enemy.Field.MonsterFields) do
         if monster ~= nil and not monster.Status.FaceDown and monster.UID == targetID then
             target = monster;
         end

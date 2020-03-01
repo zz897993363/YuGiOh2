@@ -3,7 +3,7 @@ Type = 0;
 function checkIfAvailable(player)
     for index, monster in pairs(player.Field.MonsterFields) do
         if monster ~= nil and monster.Password == '89631139' and not monster.Status.FaceDown then
-            for i, m in pairs(player.Enemy.MonsterFields) do
+            for i, m in pairs(player.Enemy.Field.MonsterFields) do
                 if monster ~= nil then
                     return true;
                 end

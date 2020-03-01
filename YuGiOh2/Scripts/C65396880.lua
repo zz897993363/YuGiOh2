@@ -23,7 +23,10 @@ function destroy(player)
             player:ClearSpellAndTrapField(i - 1);
         end
     end
+    if player.Field.FieldField ~= nil then
+        player.Enemy:ProcessEnemyFields();
+    end
     player:DiscardHands(player.Hands.Count);
-    player.TrapsWhenAttack:Clear();
-    player.TrapsWhenSummon:Clear();
+    player:ClearTrapsWhenAttack();
+    player:ClearTrapsWhenSummon();
 end

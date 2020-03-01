@@ -30,12 +30,12 @@ namespace YuGiOh2.Cards
             {
                 if (player.Field.MonsterFields[i] != null)
                 {
-                    player.AddCardToGrave(ref player.Field.MonsterFields[i]);
+                    player.AddCardToGrave(player.Field.MonsterFields[i]);
                     player.Field.MonsterFields[i] = null;
                 }
                 if (player.Field.SpellAndTrapFields[i] != null)
                 {
-                    player.AddCardToGrave(ref player.Field.SpellAndTrapFields[i]);
+                    player.AddCardToGrave(player.Field.SpellAndTrapFields[i]);
                     player.Field.SpellAndTrapFields[i] = null;
                 }
             }

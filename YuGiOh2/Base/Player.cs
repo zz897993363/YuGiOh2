@@ -92,22 +92,9 @@ namespace YuGiOh2.Base
             TrapsWhenAttack = new Queue<SpellAndTrapCard>();
         }
 
-        public void AddCardToGrave(ref Card card)
+        public void AddCardToGrave(Card card)
         {
-            DuelUtils.ResetCard(ref card);
-            ToGrave(card);
-        }
-
-        public void AddCardToGrave(ref MonsterCard card)
-        {
-            DuelUtils.ResetCard(ref card);
-            ToGrave(card);
-        }
-
-        public void AddCardToGrave(ref SpellAndTrapCard card)
-        {
-            DuelUtils.ResetCard(ref card);
-            ToGrave(card);
+            ToGrave(DuelUtils.ResetCard(card));
         }
 
         private void ToGrave(Card card)
@@ -122,10 +109,7 @@ namespace YuGiOh2.Base
             YourTurn = true;
             Message += $"你的抽牌阶段（生命值：{HP}）\r\n";
             Enemy.Message += $"对手的抽牌阶段（生命值：{HP}）\r\n";
-            while (Hands.Count < 5)
-            {
-                DrawCard();
-            }
+            DrawCard(5 - Hands.Count);
             CanSummon = true;
         }
 
@@ -190,7 +174,7 @@ namespace YuGiOh2.Base
                 Message += $"你丢弃了【{card.Cname}】\r\n";
                 Enemy.Message += $"对手丢弃了【{card.Cname}】\r\n";
                 Hands.Remove(card);
-                AddCardToGrave(ref card);
+                AddCardToGrave(card);
             }
         }
 
@@ -315,14 +299,7 @@ namespace YuGiOh2.Base
             Enemy.Message += "对手盖放了一张场地魔法卡\r\n";
             if (Field.FieldField != null)
             {
-                if (Field.FieldField.Status.FaceDown)
-                {
-                    AddCardToGrave(ref Field.FieldField);
-                }
-                else
-                {
-                    Enemy.ProcessEnemyField();
-                }
+                Enemy.ProcessEnemyField();
             }
             Hands.Remove(card);
             Field.FieldField = card;
@@ -335,14 +312,7 @@ namespace YuGiOh2.Base
             Enemy.Message += $"对手发动了场地魔法卡【{card.Cname}】\r\n";
             if (Field.FieldField != null)
             {
-                if (Field.FieldField.Status.FaceDown)
-                {
-                    AddCardToGrave(ref Field.FieldField);
-                }
-                else
-                {
-                    Enemy.ProcessEnemyField();
-                }
+                Enemy.ProcessEnemyField();
             }
             Hands.Remove(card);
             Field.FieldField = card;
@@ -356,13 +326,18 @@ namespace YuGiOh2.Base
                 return;
 
             var tmp = Enemy.Field.FieldField;
-            Enemy.AddCardToGrave(ref tmp);
+            Enemy.AddCardToGrave(tmp);
             Enemy.Field.FieldField = null;
+            if (tmp.Status.FaceDown)
+                return;
+
             Enemy.ProcessEffectWhenLeave(tmp.UID);
+            Enemy.EffectWhenSummonScripts.Remove(tmp.UID);
+            Enemy.EffectWhenSetMonsterScripts.Remove(tmp.UID);
+            Enemy.EffectWhenAttackScripts.Remove(tmp.UID);
             //Enemy.EffectWhenSummon.Remove(tmp.UID);
             //Enemy.EffectWhenSetMonster.Remove(tmp.UID);
             //Enemy.EffectWhenAttack.Remove(tmp.UID);
-            //Enemy.EffectWhenSelfLeave.Remove(tmp.UID);
         }
 
         public void ProcessEffect(string targetID)
@@ -384,7 +359,7 @@ namespace YuGiOh2.Base
 
                 if (Field.SpellAndTrapFields[i].UID == EffectingCard.UID)
                 {
-                    AddCardToGrave(ref Field.SpellAndTrapFields[i]);
+                    AddCardToGrave(Field.SpellAndTrapFields[i]);
                     Field.SpellAndTrapFields[i] = null;
                 }
             }
@@ -689,7 +664,7 @@ namespace YuGiOh2.Base
                 {
                     Enemy.DecreaseHP(attackerPoint - targetPoint);
                 }
-                Enemy.AddCardToGrave(ref target);
+                Enemy.AddCardToGrave(target);
                 Enemy.Field.MonsterFields[targetIndex] = null;
                 attacker.Status.AttackChances--;
                 attacker.Status.CanChangePosition = false;
@@ -700,7 +675,7 @@ namespace YuGiOh2.Base
                 {
                     Message += $"你的【{attacker.Cname}】被对手的【{target.Cname}】战斗破坏\r\n";
                     Enemy.Message += $"对手的【{attacker.Cname}】被你的【{target.Cname}】战斗破坏\r\n";
-                    AddCardToGrave(ref attacker);
+                    AddCardToGrave(attacker);
                     Field.MonsterFields[attackerIndex] = null;
                 }
                 else
@@ -717,9 +692,9 @@ namespace YuGiOh2.Base
                 {
                     Message += $"你的【{attacker.Cname}】与对手的【{target.Cname}】同时被战斗破坏\r\n";
                     Enemy.Message += $"对手的【{attacker.Cname}】与你的【{target.Cname}】同时被战斗破坏\r\n";
-                    AddCardToGrave(ref attacker);
+                    AddCardToGrave(attacker);
                     Field.MonsterFields[attackerIndex] = null;
-                    Enemy.AddCardToGrave(ref target);
+                    Enemy.AddCardToGrave(target);
                     Enemy.Field.MonsterFields[targetIndex] = null;
                 }
                 else
@@ -753,6 +728,15 @@ namespace YuGiOh2.Base
             Field.SpellAndTrapFields[index] = card;
         }
 
+        public void ClearTrapsWhenSummon()
+        {
+            TrapsWhenSummon.Clear();
+        }
+
+        public void ClearTrapsWhenAttack()
+        {
+            TrapsWhenAttack.Clear();
+        }
         //public void Fusion(Card card1, int fieldIndex)
         //{
         //    var card_m = DuelUtils.GetFusionCard(card1.Password, Field.MonsterFields[fieldIndex].Password);

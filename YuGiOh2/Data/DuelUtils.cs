@@ -25,41 +25,19 @@ namespace YuGiOh2.Data
         //    return result == null ? null : GetCard(result.PasswordResult);
         //}
 
-        public static void ResetCard(ref Card card)
-        {
-
-            if (card is MonsterCard)
-            {
-                MonsterCard c = card as MonsterCard;
-                ResetCard(ref c);
-            }
-            else if (card is SpellAndTrapCard)
-            {
-                SpellAndTrapCard c = card as SpellAndTrapCard;
-                ResetCard(ref c);
-            }
-        }
-
-        public static void ResetCard(ref MonsterCard card)
+        public static Card ResetCard(Card card)
         {
             string pwd = card.Password;
             string uid = card.UID;
             var card_m = new DBContext(Builder.Options).Card.FirstOrDefault(c => c.Password == pwd);
-            card = new MonsterCard(card_m)
+            if (card_m.Category == 0)
             {
-                UID = uid
-            };
-        }
-
-        public static void ResetCard(ref SpellAndTrapCard card)
-        {
-            string pwd = card.Password;
-            string uid = card.UID;
-            var card_m = new DBContext(Builder.Options).Card.FirstOrDefault(c => c.Password == pwd);
-            card = new SpellAndTrapCard(card_m)
+                return new MonsterCard(card_m);
+            }
+            else
             {
-                UID = uid
-            };
+                return new SpellAndTrapCard(card_m);
+            }
         }
 
         internal static List<Card> GetRandomDeck()
@@ -98,7 +76,8 @@ namespace YuGiOh2.Data
                 deck.Remove(card);
                 deck2.Add(card);
             }
-            deck2.Add(new SpellAndTrapCard(spellAndTraps.FirstOrDefault(c => c.Password == "04031928")));
+            deck2.Add(new SpellAndTrapCard(spellAndTraps.FirstOrDefault(c => c.Password == "04206964")));
+            deck2.Add(new SpellAndTrapCard(spellAndTraps.FirstOrDefault(c => c.Password == "83764718")));
             return deck2;
         }
 

@@ -26,7 +26,7 @@ namespace YuGiOh2.Cards
                 {
                     if (player.Field.MonsterFields.All(c => c != null))
                     {
-                        player.Enemy.AddCardToGrave(ref player.Enemy.Field.MonsterFields[i]);
+                        player.Enemy.AddCardToGrave(player.Enemy.Field.MonsterFields[i]);
                         player.Enemy.Field.MonsterFields[i] = null;
                         return;
                     }

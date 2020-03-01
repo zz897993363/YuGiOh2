@@ -29,20 +29,12 @@ namespace YuGiOh2.Cards
                 if (player.Field.SpellAndTrapFields[i] == null)
                     continue;
 
-                player.AddCardToGrave(ref player.Field.SpellAndTrapFields[i]);
+                player.AddCardToGrave(player.Field.SpellAndTrapFields[i]);
                 player.Field.SpellAndTrapFields[i] = null;
             }
             if (player.Field.FieldField != null)
             {
-                if (!player.Field.FieldField.Status.FaceDown)
-                {
-                    player.Enemy.ProcessEnemyField();
-                }
-                else
-                {
-                    player.AddCardToGrave(ref player.Field.FieldField);
-                    player.Field.FieldField = null;
-                }
+                player.Enemy.ProcessEnemyField();
             }
             player.TrapsWhenAttack.Clear();
             player.TrapsWhenSummon.Clear();

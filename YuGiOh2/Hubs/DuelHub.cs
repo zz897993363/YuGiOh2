@@ -22,8 +22,6 @@ namespace YuGiOh2.Hubs
 
         public static Dictionary<string, int> Decks = new Dictionary<string, int>();
 
-        private static readonly SemaphoreSlim readLock = new SemaphoreSlim(1, 1);
-
         public async Task LogError(Exception ex)
         {
             await Clients.Client(Context.ConnectionId).SendAsync("logErr", ex.Message + ex.StackTrace);
@@ -41,7 +39,14 @@ namespace YuGiOh2.Hubs
             {
                 game.Player2.Deck = DuelUtils.GetDeck(Decks[id2]);
             }
-            DuelUtils.LoadScripts(game);
+            try
+            {
+                DuelUtils.LoadScripts(game);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message + ex.StackTrace);
+            }
             Games.Add(game.UID, game);
             game.Player1.DrawPhase();
             game.Player2.DrawPhase();
@@ -128,7 +133,7 @@ namespace YuGiOh2.Hubs
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.StackTrace);
+                    Console.WriteLine(ex.Message + ex.StackTrace);
                 }
             }
 
@@ -150,7 +155,14 @@ namespace YuGiOh2.Hubs
             {
                 await SendMessage(Player1, Player2, uid);
                 Thread.Sleep(1000);
-                Player1.ProcessEffect(null);
+                try
+                {
+                    Player1.ProcessEffect(null);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message + ex.StackTrace);
+                }
             }
 
             await SendMessage(Player1, Player2, uid);
@@ -169,7 +181,14 @@ namespace YuGiOh2.Hubs
             {
                 await SendMessage(Player1, Player2, uid);
                 Thread.Sleep(1000);
-                Player1.ProcessEffect(null);
+                try
+                {
+                    Player1.ProcessEffect(null);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message + ex.StackTrace);
+                }
             }
 
             await SendMessage(Player1, Player2, uid);
@@ -182,7 +201,14 @@ namespace YuGiOh2.Hubs
             Player Player1 = game.Player1.ID == playerID ? game.Player1 : game.Player2;
             Player Player2 = game.Player1.ID == playerID ? game.Player2 : game.Player1;
 
-            Player1.ProcessEffect(targetID);
+            try
+            {
+                Player1.ProcessEffect(targetID);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message + ex.StackTrace);
+            }
 
             await SendMessage(Player1, Player2, uid);
         }
@@ -216,7 +242,14 @@ namespace YuGiOh2.Hubs
             {
                 await SendMessage(Player1, Player2, uid);
                 Thread.Sleep(500);
-                Player2.ProcessEffect(card.UID);
+                try
+                {
+                    Player2.ProcessEffect(card.UID);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message + ex.StackTrace);
+                }
             }
             Player1.DirectAttack(index);
 
@@ -248,7 +281,15 @@ namespace YuGiOh2.Hubs
                 {
                     await SendMessage(Player1, Player2, uid);
                     Thread.Sleep(500);
-                    Player2.ProcessEffect(card1.UID);
+                    
+                    try
+                    {
+                        Player2.ProcessEffect(card1.UID);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message + ex.StackTrace);
+                    }
                 }
                 Player1.Battle(index1, index2);
             }

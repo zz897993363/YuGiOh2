@@ -21,7 +21,7 @@ namespace YuGiOh2.Cards
                     player.Enemy.Field.MonsterFields[i].Level > 4)
                     continue;
 
-                player.Enemy.AddCardToGrave(ref player.Enemy.Field.MonsterFields[i]);
+                player.Enemy.AddCardToGrave(player.Enemy.Field.MonsterFields[i]);
                 player.Enemy.Field.MonsterFields[i] = null;
             }
         }
