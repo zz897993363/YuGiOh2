@@ -10,9 +10,6 @@ function checkIfAvailable(player)
 end
 
 function processEffect(player)
-    if targetID == nil then
-        return ;
-    end
     local min = 999999;
     for i, monster in pairs(player.Enemy.Field.MonsterFields) do
         if monster ~= nil and monster.ATK < min then

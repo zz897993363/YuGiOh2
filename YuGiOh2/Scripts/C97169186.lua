@@ -10,9 +10,6 @@ function checkIfAvailable(player)
 end
 
 function processEffect(player)
-    if targetID == nil then
-        return ;
-    end
     local max = 0;
     for i, monster in pairs(player.Enemy.Field.MonsterFields) do
         if monster ~= nil and monster.ATK > max then

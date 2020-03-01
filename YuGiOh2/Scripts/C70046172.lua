@@ -15,6 +15,9 @@ function checkIfAvailable(player)
 end
 
 function processEffect(targetID, player)
+    if targetID == nil then
+        return ;
+    end
     local target = nil;
     for i, monster in pairs(player.Field.MonsterFields) do
         if monster ~= nil and monster.UID == targetID then
