@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -9,7 +8,6 @@ using Microsoft.Extensions.Hosting;
 using MoonSharp.Interpreter;
 using System;
 using System.Reflection;
-using YuGiOh2.Base;
 using YuGiOh2.Data;
 using YuGiOh2.Hubs;
 
@@ -38,7 +36,7 @@ namespace YuGiOh2
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
-                configuration.RootPath = "ClientApp";
+                configuration.RootPath = "ClientApp/build";
             });
         }
 
@@ -48,14 +46,13 @@ namespace YuGiOh2
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                Environment.CurrentDirectory = @"G:\ygo2\YuGiOh2";
+                DuelUtils.ScriptsPath = @"G:\ygo2\YuGiOh2";
             }
             else
             {
-                app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
+                DuelUtils.ScriptsPath = env.ContentRootPath + "/Scripts/";
             }
+
             Assembly assembly = Assembly.GetExecutingAssembly();
             UserData.RegisterAssembly(assembly);
             app.UseHttpsRedirection();
@@ -82,7 +79,6 @@ namespace YuGiOh2
                 if (env.IsDevelopment())
                 {
                     spa.UseReactDevelopmentServer(npmScript: "start");
-                    //spa.UseProxyToSpaDevelopmentServer("http://localhost:3000");
                 }
             });
         }

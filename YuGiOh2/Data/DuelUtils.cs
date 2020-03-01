@@ -9,6 +9,8 @@ namespace YuGiOh2.Data
 {
     public static class DuelUtils
     {
+        public static string ScriptsPath { get; set; }
+
         public static DbContextOptionsBuilder<DBContext> Builder { get; set; }
 
         public static Models.Card GetCard(string password)
@@ -76,8 +78,6 @@ namespace YuGiOh2.Data
                 deck.Remove(card);
                 deck2.Add(card);
             }
-            deck2.Add(new SpellAndTrapCard(spellAndTraps.FirstOrDefault(c => c.Password == "04206964")));
-            deck2.Add(new SpellAndTrapCard(spellAndTraps.FirstOrDefault(c => c.Password == "83764718")));
             return deck2;
         }
 
@@ -140,7 +140,7 @@ namespace YuGiOh2.Data
                 if (scripts.ContainsKey(card.Password))
                     continue;
 
-                string path = Environment.CurrentDirectory + $@"\Scripts\C{card.Password}.lua";
+                string path = ScriptsPath + $"C{card.Password}.lua";
                 if (!System.IO.File.Exists(path))
                     continue;
 
