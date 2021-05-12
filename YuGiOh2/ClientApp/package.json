@@ -7,7 +7,7 @@
     "antd": "^3.26.9",
     "axios": "^0.19.1",
     "file-saver": "^2.0.2",
-    "merge": "^1.2.1",
+    "merge": "^2.1.1",
     "oidc-client": "^1.8.0",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
